@@ -107,10 +107,17 @@ button{cursor:pointer}
 .hint{font-size:13px;color:var(--muted);margin:0}
 .hint b{font-weight:600;color:var(--ink)}
 .sets{display:flex;flex-direction:column;gap:6px}
-.set{display:grid;grid-template-columns:28px 1fr 1fr 48px 32px;gap:8px;align-items:center}
-.set.k-r,.set.k-t{grid-template-columns:28px 1fr 48px 32px}
-.plan .set{grid-template-columns:28px 1fr 1fr 32px}
-.plan .set.k-r,.plan .set.k-t{grid-template-columns:28px 1fr 32px}
+.set{display:grid;grid-template-columns:24px 1fr 1fr 38px 46px 28px;gap:6px;align-items:center}
+.set.k-r,.set.k-t{grid-template-columns:24px 1fr 46px 28px}
+.plan .set{grid-template-columns:24px 1fr 1fr 38px 28px}
+.plan .set.k-r,.plan .set.k-t{grid-template-columns:24px 1fr 28px}
+.setgrp{display:flex;flex-direction:column;gap:4px}
+.set.drop input{min-height:38px;font-size:19px}
+.set.drop .n{color:var(--accent);font-size:16px}
+.drop-btn{min-height:44px;border-radius:8px;border:1px dashed var(--line);background:transparent;display:grid;place-items:center;padding:0}
+.drop-btn svg{width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.drop-btn:hover svg{stroke:var(--accent)}
+.drop-btn.has svg{stroke:var(--accent)}
 .set.head{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
 .set .n{font-family:var(--display);font-size:18px;color:var(--muted);text-align:center}
 .set input{width:100%;min-width:0;min-height:44px;border:1px solid var(--line);background:var(--sunk);border-radius:8px;text-align:center;font-family:var(--display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;padding:0 4px}
@@ -284,7 +291,7 @@ function lastFor(name,beforeTs){
 function setText(ex,s){
   if(ex.kind==="t") return fmt(s.r)+" с";
   if(ex.kind==="r") return fmt(s.r);
-  return (num(s.w)?fmt(s.w)+"кг × ":"")+fmt(s.r);
+  return [s,...(s.drops||[])].map(x=>(num(x.w)?fmt(x.w)+"кг × ":"")+fmt(x.r)).join(" → ");
 }
 function summarize(ex){
   const sets=ex.sets||[];const n=sets.length;if(!n) return "";
@@ -292,6 +299,7 @@ function summarize(ex){
   let out=reps.length===1&&num(reps[0])?n+"×"+reps[0]+(ex.kind==="t"?" с":""):n+" "+plural(n,"подход","подхода","подходов");
   const mw=Math.max(...sets.map(s=>num(s.w)));
   if(ex.kind==="wr"&&mw>0) out+=" · "+fmt(mw)+" кг";
+  if(ex.kind==="wr"&&sets.some(s=>s.drops&&s.drops.length)) out+=" · дроп";
   return out;
 }
 const tonnage=exs=>exs.reduce((a,ex)=>a+(ex.kind==="wr"?(ex.sets||[]).reduce((b,s)=>b+num(s.w)*num(s.r),0):0),0);
@@ -304,17 +312,24 @@ function refreshDatalist(){
 
 /* ---------- views ---------- */
 const CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const DROP='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h5v5h5v5h6"/><path d="M17 12l3 3-3 3"/></svg>';
 function exBlock(ex,ei,scope,live,total){
   const k=ex.kind||"wr";
   const last=live?lastFor(ex.name,active&&active.startedAt):null;
   const hint=live?`<p class="hint" data-hint>${hintHtml(last)}</p>`:"";
-  const head=`<div class="set head k-${k}"><span class="n">№</span>${k==="wr"?"<span>кг</span>":""}<span>${k==="t"?"сек":"повт"}</span>${live?"<span></span>":""}<span></span></div>`;
+  const head=`<div class="set head k-${k}"><span class="n">№</span>${k==="wr"?"<span>кг</span>":""}<span>${k==="t"?"сек":"повт"}</span>${k==="wr"?"<span></span>":""}${live?"<span></span>":""}<span></span></div>`;
   const rows=(ex.sets||[]).map((s,si)=>{
     const prev=si>0?ex.sets[si-1]:(last&&last.ex.sets[0])||{};
     const w=k==="wr"?`<input data-f="w" inputmode="decimal" enterkeyhint="next" value="${esc(s.w)}" placeholder="${esc(prev.w!=null&&prev.w!==""?fmt(prev.w):"0")}" aria-label="Вес, кг, подход ${si+1}">`:"";
     const r=`<input data-f="r" inputmode="numeric" enterkeyhint="next" value="${esc(s.r)}" placeholder="${esc(prev.r!=null&&prev.r!==""?fmt(prev.r):"0")}" aria-label="${k==="t"?"Секунды":"Повторы"}, подход ${si+1}">`;
     const chk=live?`<button class="chk" data-act="toggle-set" aria-pressed="${!!s.done}" aria-label="Подход ${si+1} выполнен">${CHECK}</button>`:"";
-    return `<div class="set k-${k}${s.done?" is-done":""}" data-si="${si}"><span class="n">${si+1}</span>${w}${r}${chk}<button class="x" data-act="del-set" aria-label="Удалить подход ${si+1}">×</button></div>`;
+    const dl=(k==="wr"&&s.drops)||[];
+    const dropBtn=k==="wr"?`<button class="drop-btn${dl.length?" has":""}" data-act="add-drop" aria-label="Добавить дроп к подходу ${si+1}" title="Дроп: снизить вес и продолжить подход">${DROP}</button>`:"";
+    const drops=dl.map((d,di)=>`<div class="set drop k-wr${s.done?" is-done":""}" data-di="${di}"><span class="n" aria-hidden="true">↘</span>
+      <input data-f="w" inputmode="decimal" enterkeyhint="next" value="${esc(d.w)}" placeholder="кг" aria-label="Дроп ${di+1}, вес, подход ${si+1}">
+      <input data-f="r" inputmode="numeric" enterkeyhint="next" value="${esc(d.r)}" placeholder="повт" aria-label="Дроп ${di+1}, повторы, подход ${si+1}">
+      <span></span>${live?"<span></span>":""}<button class="x" data-act="del-drop" aria-label="Удалить дроп ${di+1}">×</button></div>`).join("");
+    return `<div class="setgrp" data-si="${si}"><div class="set main k-${k}${s.done?" is-done":""}"><span class="n">${si+1}</span>${w}${r}${dropBtn}${chk}<button class="x" data-act="del-set" aria-label="Удалить подход ${si+1}">×</button></div>${drops}</div>`;
   }).join("");
   return `<section class="ex${live?"":" plan"}" data-ei="${ei}">
     <div class="ex-head"><span class="ex-num">${ei+1}</span>
@@ -488,7 +503,9 @@ function render(){
 /* ---------- actions ---------- */
 const scopeObj=el=>{const s=el.closest("[data-scope]");if(!s)return null;return s.dataset.scope==="active"?active:(editing&&editing.data)};
 const touched=el=>{const s=el.closest("[data-scope]");if(s&&s.dataset.scope==="active")saveActiveSoon()};
-const planFrom=exs=>exs.map(e=>({name:e.name,kind:e.kind||"wr",sets:(e.sets||[]).map(s=>({w:s.w==null?"":s.w,r:s.r==null?"":s.r}))}));
+const cleanDrops=s=>(s.drops||[]).filter(d=>String(d.w==null?"":d.w).trim()!==""||String(d.r==null?"":d.r).trim()!=="").map(d=>({w:d.w==null?"":d.w,r:d.r==null?"":d.r}));
+const withDrops=(o,s)=>{const d=cleanDrops(s);if(d.length)o.drops=d;return o};
+const planFrom=exs=>exs.map(e=>({name:e.name,kind:e.kind||"wr",sets:(e.sets||[]).map(s=>withDrops({w:s.w==null?"":s.w,r:s.r==null?"":s.r},s))}));
 let wake=null;
 async function keepAwake(){try{if(active&&navigator.wakeLock&&document.visibilityState==="visible")wake=await navigator.wakeLock.request("screen")}catch(e){}}
 document.addEventListener("visibilitychange",keepAwake);
@@ -496,14 +513,14 @@ document.addEventListener("visibilitychange",keepAwake);
 function startWorkout(name,exs,templateId){
   if(active){tab="workout";render();toast("Сначала завершите текущую тренировку");return}
   active={id:uid(),name:name||"Тренировка",templateId:templateId||null,startedAt:Date.now(),restFrom:null,
-    exercises:(exs&&exs.length?exs:[{name:"",kind:"wr",sets:[{w:"",r:""}]}]).map(e=>({name:e.name,kind:e.kind||"wr",sets:(e.sets&&e.sets.length?e.sets:[{w:"",r:""}]).map(s=>({w:s.w==null?"":s.w,r:s.r==null?"":s.r,done:false}))}))};
+    exercises:(exs&&exs.length?exs:[{name:"",kind:"wr",sets:[{w:"",r:""}]}]).map(e=>({name:e.name,kind:e.kind||"wr",sets:(e.sets&&e.sets.length?e.sets:[{w:"",r:""}]).map(s=>({w:s.w==null?"":s.w,r:s.r==null?"":s.r,done:false,drops:cleanDrops(s)}))}))};
   ui.finishing=false;ui.confirm=null;tab="workout";LS.set("podhod:tab",tab);flushActive();render();window.scrollTo(0,0);keepAwake();
 }
 
 async function finishSave(){
   const anyDone=active.exercises.some(e=>e.sets.some(s=>s.done));
   const exs=active.exercises.map(e=>({name:(e.name||"").trim()||"Упражнение",kind:e.kind||"wr",
-      sets:e.sets.filter(s=>anyDone?s.done:(String(s.w).trim()!==""||String(s.r).trim()!=="")).map(s=>({w:s.w,r:s.r}))}))
+      sets:e.sets.filter(s=>anyDone?s.done:(String(s.w).trim()!==""||String(s.r).trim()!=="")).map(s=>e.kind==="wr"||!e.kind?withDrops({w:s.w,r:s.r},s):{w:s.w,r:s.r})}))
     .filter(e=>e.sets.length);
   if(!exs.length){toast("Заполните хотя бы один подход");return}
   const keep=$("#opt-keep")&&$("#opt-keep").checked, mk=$("#opt-new")&&$("#opt-new").checked, nm=($("#opt-name")&&$("#opt-name").value.trim())||active.name;
@@ -551,11 +568,14 @@ document.addEventListener("click",e=>{
     case "add-ex":{obj.exercises.push({name:"",kind:"wr",sets:[{w:"",r:"",done:false}]});touched(el);render();const ins=document.querySelectorAll(".ex-name");ins[ins.length-1]&&ins[ins.length-1].focus();return}
     case "del-ex": obj.exercises.splice(ei,1);touched(el);render();return;
     case "move-ex":{const j=ei+(+el.dataset.d);if(j<0||j>=obj.exercises.length)return;const t=obj.exercises[ei];obj.exercises[ei]=obj.exercises[j];obj.exercises[j]=t;touched(el);render();return}
-    case "add-set":{const l=ex.sets[ex.sets.length-1]||{w:"",r:""};ex.sets.push({w:l.w,r:l.r,done:false});touched(el);render();return}
+    case "add-set":{const l=ex.sets[ex.sets.length-1]||{w:"",r:""};ex.sets.push({w:l.w,r:l.r,done:false,drops:(l.drops||[]).map(d=>({w:d.w,r:d.r}))});touched(el);render();return}
+    case "add-drop":{const s=ex.sets[si];s.drops=s.drops||[];s.drops.push({w:"",r:""});touched(el);render();
+      const inp=document.querySelector(`[data-ei="${ei}"] [data-si="${si}"] [data-di="${s.drops.length-1}"] input`);inp&&inp.focus();return}
+    case "del-drop":{const di=+el.closest("[data-di]").dataset.di;ex.sets[si].drops.splice(di,1);touched(el);render();return}
     case "del-set": ex.sets.splice(si,1);touched(el);render();return;
     case "toggle-set":{
       const s=ex.sets[si];
-      if(!s.done){siEl.querySelectorAll("input").forEach(inp=>{if(inp.value.trim()===""&&inp.placeholder&&inp.placeholder!=="0")s[inp.dataset.f]=inp.placeholder.replace(",",".")});s.done=true;active.restFrom=Date.now()}
+      if(!s.done){siEl.querySelectorAll(".main input").forEach(inp=>{if(inp.value.trim()===""&&inp.placeholder&&inp.placeholder!=="0")s[inp.dataset.f]=inp.placeholder.replace(",",".")});s.done=true;active.restFrom=Date.now()}
       else s.done=false;
       saveActiveSoon();render();return}
     case "finish-open": ui.finishing=true;ui.keepTpl=false;ui.newTpl=false;ui.newTplName=active.name;render();return;
@@ -600,7 +620,7 @@ document.addEventListener("input",e=>{
     const ex=obj.exercises[+el.closest("[data-ei]").dataset.ei];
     if(f==="name")ex.name=el.value;
     else if(f==="kind"){ex.kind=el.value;touched(el);render();return}
-    else{ex.sets[+el.closest("[data-si]").dataset.si][f]=el.value.replace(",",".")}
+    else{const s=ex.sets[+el.closest("[data-si]").dataset.si];const dEl=el.closest("[data-di]");(dEl?s.drops[+dEl.dataset.di]:s)[f]=el.value.replace(",",".")}
   }
   touched(el);
 });
