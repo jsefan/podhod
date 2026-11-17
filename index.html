@@ -319,9 +319,8 @@ function exBlock(ex,ei,scope,live,total){
   const hint=live?`<p class="hint" data-hint>${hintHtml(last)}</p>`:"";
   const head=`<div class="set head k-${k}"><span class="n">№</span>${k==="wr"?"<span>кг</span>":""}<span>${k==="t"?"сек":"повт"}</span>${k==="wr"?"<span></span>":""}${live?"<span></span>":""}<span></span></div>`;
   const rows=(ex.sets||[]).map((s,si)=>{
-    const prev=si>0?ex.sets[si-1]:(last&&last.ex.sets[0])||{};
-    const w=k==="wr"?`<input data-f="w" inputmode="decimal" enterkeyhint="next" value="${esc(s.w)}" placeholder="${esc(prev.w!=null&&prev.w!==""?fmt(prev.w):"0")}" aria-label="Вес, кг, подход ${si+1}">`:"";
-    const r=`<input data-f="r" inputmode="numeric" enterkeyhint="next" value="${esc(s.r)}" placeholder="${esc(prev.r!=null&&prev.r!==""?fmt(prev.r):"0")}" aria-label="${k==="t"?"Секунды":"Повторы"}, подход ${si+1}">`;
+    const w=k==="wr"?`<input data-f="w" inputmode="decimal" enterkeyhint="next" value="${esc(s.w)}" placeholder="кг" aria-label="Вес, кг, подход ${si+1}">`:"";
+    const r=`<input data-f="r" inputmode="numeric" enterkeyhint="next" value="${esc(s.r)}" placeholder="${k==="t"?"сек":"повт"}" aria-label="${k==="t"?"Секунды":"Повторы"}, подход ${si+1}">`;
     const chk=live?`<button class="chk" data-act="toggle-set" aria-pressed="${!!s.done}" aria-label="Подход ${si+1} выполнен">${CHECK}</button>`:"";
     const dl=(k==="wr"&&s.drops)||[];
     const dropBtn=k==="wr"?`<button class="drop-btn${dl.length?" has":""}" data-act="add-drop" aria-label="Добавить дроп к подходу ${si+1}" title="Дроп: снизить вес и продолжить подход">${DROP}</button>`:"";
@@ -568,14 +567,14 @@ document.addEventListener("click",e=>{
     case "add-ex":{obj.exercises.push({name:"",kind:"wr",sets:[{w:"",r:"",done:false}]});touched(el);render();const ins=document.querySelectorAll(".ex-name");ins[ins.length-1]&&ins[ins.length-1].focus();return}
     case "del-ex": obj.exercises.splice(ei,1);touched(el);render();return;
     case "move-ex":{const j=ei+(+el.dataset.d);if(j<0||j>=obj.exercises.length)return;const t=obj.exercises[ei];obj.exercises[ei]=obj.exercises[j];obj.exercises[j]=t;touched(el);render();return}
-    case "add-set":{const l=ex.sets[ex.sets.length-1]||{w:"",r:""};ex.sets.push({w:l.w,r:l.r,done:false});touched(el);render();return}
+    case "add-set":{const l=ex.sets[ex.sets.length-1]||{w:"",r:""};ex.sets.push({w:"",r:"",done:false});touched(el);render();return}
     case "add-drop":{const s=ex.sets[si];s.drops=s.drops||[];s.drops.push({w:"",r:""});touched(el);render();
       const inp=document.querySelector(`[data-ei="${ei}"] [data-si="${si}"] [data-di="${s.drops.length-1}"] input`);inp&&inp.focus();return}
     case "del-drop":{const di=+el.closest("[data-di]").dataset.di;ex.sets[si].drops.splice(di,1);touched(el);render();return}
     case "del-set": ex.sets.splice(si,1);touched(el);render();return;
     case "toggle-set":{
       const s=ex.sets[si];
-      if(!s.done){siEl.querySelectorAll(".main input").forEach(inp=>{if(inp.value.trim()===""&&inp.placeholder&&inp.placeholder!=="0")s[inp.dataset.f]=inp.placeholder.replace(",",".")});s.done=true;active.restFrom=Date.now()}
+      if(!s.done){s.done=true;active.restFrom=Date.now()}
       else s.done=false;
       saveActiveSoon();render();return}
     case "finish-open": ui.finishing=true;ui.keepTpl=false;ui.newTpl=false;ui.newTplName=active.name;render();return;
