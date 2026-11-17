@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Подход</title>
+<meta name="description" content="Дневник тренировок: шаблоны, подходы, история">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Подход">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDF0EF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1211" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: one narrow column like a gym notebook page, sticky workout bar on top, tab bar fixed at the bottom for thumb reach */
+:root{
+  --bg:#EDF0EF; --surface:#FFFFFF; --sunk:#F5F7F6; --ink:#141A18; --muted:#5B6662; --line:#D3DAD7;
+  --accent:#1F4FD1; --accent-ink:#FFFFFF; --accent-soft:#E2E9FB;
+  --done:#1C7F4F; --done-bg:#E1F2E8; --warn:#BF3320; --warn-bg:#FBE7E3;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1211; --surface:#171C1B; --sunk:#1D2321; --ink:#E7EDEB; --muted:#93A09B; --line:#2B3331;
+  --accent:#7196FF; --accent-ink:#0A1024; --accent-soft:#1C2645;
+  --done:#56CC90; --done-bg:#16301F; --warn:#FF7D66; --warn-bg:#3A1B16; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1211; --surface:#171C1B; --sunk:#1D2321; --ink:#E7EDEB; --muted:#93A09B; --line:#2B3331;
+  --accent:#7196FF; --accent-ink:#0A1024; --accent-soft:#1C2645;
+  --done:#56CC90; --done-bg:#16301F; --warn:#FF7D66; --warn-bg:#3A1B16; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+body{margin:0;color:var(--ink);font:15px/1.45 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:env(safe-area-inset-top,0px) calc(88px + env(safe-area-inset-bottom,0px))}
+button,a,label,summary{touch-action:manipulation}
+[hidden]{display:none!important}
+img{max-width:100%}
+@media (max-width:480px){.ex-head{flex-wrap:wrap}.ex-name{flex:1 1 calc(100% - 40px)}.kind{margin-left:28px}}
+input,select,textarea{font-size:16px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.app{max-width:620px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:.01em;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:34px}
+h2{font-size:24px}
+h3{font-size:19px}
+.num{font-family:var(--display);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-block:20px 12px}
+.top .brand{font-family:var(--display);font-weight:700;font-size:28px;letter-spacing:.02em}
+.top .brand b{color:var(--accent)}
+.banner{background:var(--accent-soft);border-radius:var(--r);padding:10px 12px;font-size:13px;margin-bottom:12px}
+.banner.warn{background:var(--warn-bg);color:var(--ink)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:14px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.danger{color:var(--warn);border-color:var(--warn)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);border-color:var(--line)}
+.btn.small{min-height:36px;padding:0 12px;font-size:13px}
+.btn.block{width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.stack{display:flex;flex-direction:column;gap:12px}
+.section{display:flex;flex-direction:column;gap:12px;margin-top:24px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card .meta{font-size:13px;color:var(--muted)}
+.card .list{font-size:14px;color:var(--ink);margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px}
+.card .list li{display:flex;justify-content:space-between;gap:12px}
+.card .list li span:last-child{color:var(--muted);white-space:nowrap;font-family:var(--display);font-size:16px}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+
+.start{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px}
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:20px;text-align:left;display:flex;flex-direction:column;gap:10px;color:var(--muted)}
+.empty strong{color:var(--ink)}
+
+/* live workout */
+.wbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.title-input{width:100%;border:0;background:transparent;font-family:var(--display);font-weight:700;font-size:30px;padding:0;min-width:0}
+.title-input::placeholder{color:var(--muted)}
+.clocks{display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}
+.clock{display:flex;gap:6px;align-items:baseline}
+.clock .num{font-size:24px;font-weight:600}
+.clock.rest .num{color:var(--accent)}
+
+.ex{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.ex-head{display:flex;gap:8px;align-items:center}
+.ex-num{font-family:var(--display);font-weight:700;font-size:20px;color:var(--muted);min-width:20px}
+.ex-name{flex:1;min-width:0;border:0;border-bottom:1px solid var(--line);background:transparent;font-weight:600;font-size:16px;padding:6px 0;border-radius:0}
+.ex-name:focus{border-bottom-color:var(--accent);outline:none}
+.kind{border:1px solid var(--line);background:var(--sunk);border-radius:8px;font-size:16px;padding:6px 4px;max-width:112px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.hint b{font-weight:600;color:var(--ink)}
+.sets{display:flex;flex-direction:column;gap:6px}
+.set{display:grid;grid-template-columns:28px 1fr 1fr 48px 32px;gap:8px;align-items:center}
+.set.k-r,.set.k-t{grid-template-columns:28px 1fr 48px 32px}
+.plan .set{grid-template-columns:28px 1fr 1fr 32px}
+.plan .set.k-r,.plan .set.k-t{grid-template-columns:28px 1fr 32px}
+.set.head{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.set .n{font-family:var(--display);font-size:18px;color:var(--muted);text-align:center}
+.set input{width:100%;min-width:0;min-height:44px;border:1px solid var(--line);background:var(--sunk);border-radius:8px;text-align:center;font-family:var(--display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;padding:0 4px}
+.set input::placeholder{color:var(--muted);opacity:.55;font-weight:500}
+.set input:focus{border-color:var(--accent);outline:none;background:var(--surface)}
+.chk{min-height:44px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);display:grid;place-items:center;padding:0}
+.chk svg{width:22px;height:22px;stroke:var(--muted);fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.set.is-done input{background:var(--done-bg);border-color:transparent}
+.set.is-done .chk{background:var(--done);border-color:var(--done)}
+.set.is-done .chk svg{stroke:var(--surface)}
+.x{min-height:32px;border:0;background:transparent;color:var(--muted);font-size:20px;line-height:1;border-radius:6px;padding:0}
+.x:hover{color:var(--warn);background:var(--warn-bg)}
+.ex-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+
+.finish{background:var(--surface);border:2px solid var(--accent);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.check input{width:20px;height:20px;margin-top:1px;accent-color:var(--accent);flex:none}
+.field{width:100%;min-height:44px;border:1px solid var(--line);border-radius:8px;background:var(--sunk);padding:0 12px}
+.field:focus{border-color:var(--accent);outline:none}
+textarea.field{padding:10px 12px;min-height:70px;resize:vertical}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.stat .num{font-size:28px;font-weight:700;display:block;line-height:1.1}
+.stat span:last-child{font-size:12px;color:var(--muted)}
+
+details.hist summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+details.hist summary::-webkit-details-marker{display:none}
+details.hist summary .chev{transition:transform .15s;color:var(--muted);font-size:14px;margin-top:4px}
+details.hist[open] summary .chev{transform:rotate(90deg)}
+.detail{display:flex;flex-direction:column;gap:8px;margin-top:6px;padding-top:10px;border-top:1px solid var(--line)}
+.detail .dex{display:flex;flex-direction:column;gap:2px}
+.detail .dsets{font-family:var(--display);font-size:17px;color:var(--muted)}
+.cal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-top:12px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.cal-head h3{text-transform:capitalize}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal-wd{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;font-weight:600;padding-block:2px 4px}
+.day{min-height:40px;border-radius:8px;border:0;background:transparent;font-family:var(--display);font-size:18px;font-weight:500;color:var(--ink);display:grid;place-items:center;padding:0;cursor:default;position:relative}
+.day.today{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.day.has-w{background:var(--accent);color:var(--accent-ink);font-weight:700;cursor:pointer}
+.day.has-w.today{box-shadow:inset 0 0 0 2px var(--accent-ink)}
+.day .cnt{position:absolute;top:3px;right:5px;font-size:11px;line-height:1}
+.day.out{visibility:hidden}
+.tip{position:fixed;z-index:30;background:var(--ink);color:var(--bg);border-radius:8px;padding:8px 10px;font-size:13px;line-height:1.35;max-width:240px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.tip .td{font-size:11px;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-bottom:2px}
+.tip div+div{margin-top:2px}
+.month{font-family:var(--display);font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+nav.tabs .in{max-width:620px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+nav.tabs button{min-height:52px;border:0;background:transparent;border-radius:var(--r);font-family:var(--display);font-size:18px;font-weight:600;color:var(--muted);letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+nav.tabs button[aria-current="true"]{color:var(--accent);background:var(--accent-soft)}
+nav.tabs .dot{width:6px;height:6px;border-radius:50%;background:var(--done)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;z-index:20;max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.backup{margin-top:28px}
+.backup .meta{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">ПОД<b>ХОД</b></div>
+    <div class="muted" id="today"></div>
+  </header>
+  <div id="banner"></div>
+  <main id="main"><p class="muted">Загружаю ваши тренировки…</p></main>
+</div>
+<nav class="tabs" aria-label="Разделы"><div class="in">
+  <button data-act="tab" data-tab="workout" id="tab-workout">Тренировка</button>
+  <button data-act="tab" data-tab="templates" id="tab-templates">Шаблоны</button>
+  <button data-act="tab" data-tab="history" id="tab-history">История</button>
+</div></nav>
+<div class="toast" id="toast" hidden></div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<datalist id="exlist"></datalist>
+<input type="file" id="import-file" accept="application/json,.json" hidden>
+
+<script>
+(function(){
+"use strict";
+const CATALOG=["Приседания со штангой","Гоблет-приседания","Жим ногами","Болгарские сплит-приседания","Выпады с гантелями","Румынская тяга","Становая тяга","Ягодичный мост со штангой","Отведение ноги в кроссовере","Разгибания ног в тренажёре","Сгибания ног в тренажёре","Подъёмы на носки","Жим лёжа","Жим гантелей на наклонной скамье","Отжимания","Отжимания на брусьях","Жим стоя","Разведения гантелей в стороны","Подтягивания","Тяга верхнего блока","Тяга горизонтального блока","Тяга штанги в наклоне","Тяга гантели в наклоне","Гиперэкстензия","Сгибания рук со штангой","Молотки","Французский жим","Разгибания рук на блоке","Планка","Скручивания"];
+const KINDS={wr:"кг × повт",r:"повторы",t:"секунды"};
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=> (crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,10));
+const clone=o=>JSON.parse(JSON.stringify(o));
+const num=v=>{const n=parseFloat(String(v==null?"":v).replace(",","."));return isFinite(n)?n:0};
+const fmt=v=>{const n=num(v);return Number.isInteger(n)?String(n):String(Math.round(n*100)/100).replace(".",",")};
+const norm=s=>String(s||"").trim().toLowerCase().replace(/ё/g,"е");
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const dLong=ts=>new Date(ts).toLocaleDateString("ru-RU",{weekday:"short",day:"numeric",month:"long"});
+const dShort=ts=>new Date(ts).toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
+const clock=ms=>{ms=Math.max(0,ms);const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;return (h?h+":"+String(m).padStart(2,"0"):m)+":"+String(ss).padStart(2,"0")};
+const plural=(n,a,b,c)=>{const m10=n%10,m100=n%100;return m10===1&&m100!==11?a:(m10>=2&&m10<=4&&(m100<10||m100>=20)?b:c)};
+let toastT;function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2600)}
+
+/* ---------- storage: on this phone only (localStorage) ---------- */
+const LSW=(k,v)=>{localStorage.setItem(k,JSON.stringify(v))}; // throws on failure, unlike LS.set
+const store={mode:"local",subs:{},
+  async init(){try{navigator.storage&&navigator.storage.persist&&await navigator.storage.persist()}catch(e){}},
+  subscribe(coll,cb){this.subs[coll]=cb;cb(Object.values(LS.get("podhod:"+coll,{})),false)},
+  emit(coll){this.subs[coll]&&this.subs[coll](Object.values(LS.get("podhod:"+coll,{})),false)},
+  async put(coll,id,data){
+    const body=clone(data);delete body.id;
+    const m=LS.get("podhod:"+coll,{});m[id]=Object.assign({id},body);LSW("podhod:"+coll,m);this.emit(coll);
+  },
+  async remove(coll,id){
+    const m=LS.get("podhod:"+coll,{});delete m[id];LSW("podhod:"+coll,m);this.emit(coll);
+  },
+  async merge(coll,items){
+    const m=LS.get("podhod:"+coll,{});let n=0;
+    items.forEach(it=>{if(it&&typeof it==="object"&&typeof it.id==="string"&&Array.isArray(it.exercises)){if(!m[it.id])n++;m[it.id]=it}});
+    LSW("podhod:"+coll,m);this.emit(coll);return n;
+  },
+  async getActive(){return LS.get("podhod:active",null)},
+  async setActive(w){LSW("podhod:active",w)}
+};
+const saveErr=()=>toast("Не удалось сохранить: память браузера заполнена");
+
+/* ---------- backup to a file ---------- */
+async function exportData(){
+  const data={app:"podhod",version:1,exportedAt:Date.now(),templates,sessions};
+  const name="podhod-"+new Date().toISOString().slice(0,10)+".json";
+  const blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+  const done=()=>{LS.set("podhod:lastBackup",Date.now());render()};
+  try{
+    const file=new File([blob],name,{type:"application/json"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});done();toast("Копия сохранена");return}
+  }catch(e){if(e&&e.name==="AbortError")return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);done();
+}
+async function importData(file){
+  try{
+    const d=JSON.parse(await file.text());
+    if(!d||d.app!=="podhod")throw new Error("format");
+    const nt=await store.merge("templates",Array.isArray(d.templates)?d.templates:[]);
+    const ns=await store.merge("sessions",Array.isArray(d.sessions)?d.sessions:[]);
+    toast(`Восстановлено: ${ns} ${plural(ns,"тренировка","тренировки","тренировок")}, ${nt} ${plural(nt,"шаблон","шаблона","шаблонов")}`);
+  }catch(e){toast("Это не файл копии «Подхода»")}
+}
+function viewBackup(){
+  const lb=LS.get("podhod:lastBackup",0);
+  return `<div class="section backup"><h2>Резервная копия</h2>
+    <div class="meta">Тренировки хранятся только на этом телефоне. Сохраняйте копию в «Файлы» или iCloud Drive, чтобы ничего не потерять при смене телефона.${lb?` Последняя копия: ${esc(dShort(lb))}.`:" Копий ещё не было."}</div>
+    <div class="row"><button class="btn" data-act="backup-export">Сохранить копию</button><button class="btn ghost" data-act="backup-import">Восстановить из файла</button></div></div>`;
+}
+
+/* ---------- state ---------- */
+let tab=LS.get("podhod:tab","workout"); if(!["workout","templates","history"].includes(tab)) tab="workout";
+let templates=[],sessions=[],active=null,editing=null;
+const ui={confirm:null,finishing:false,keepTpl:false,newTpl:false,newTplName:""};
+const ready={templates:false,sessions:false,active:false};
+const cal={y:new Date().getFullYear(),m:new Date().getMonth()};
+const dayKey=ts=>{const d=new Date(ts);return d.getFullYear()+"-"+d.getMonth()+"-"+d.getDate()};
+let activeT=null,activeQ=Promise.resolve();
+function saveActiveSoon(){clearTimeout(activeT);activeT=setTimeout(flushActive,600)}
+function flushActive(){clearTimeout(activeT);const snap=active?clone(active):null;activeQ=activeQ.then(()=>store.setActive(snap)).catch(saveErr)}
+
+/* ---------- derived ---------- */
+function lastFor(name,beforeTs){
+  const n=norm(name);if(!n) return null;
+  for(const s of sessions){ if(beforeTs&&s.finishedAt>=beforeTs) continue;
+    const ex=(s.exercises||[]).find(e=>norm(e.name)===n); if(ex) return {date:s.finishedAt,ex};}
+  return null;
+}
+function setText(ex,s){
+  if(ex.kind==="t") return fmt(s.r)+" с";
+  if(ex.kind==="r") return fmt(s.r);
+  return (num(s.w)?fmt(s.w)+"кг × ":"")+fmt(s.r);
+}
+function summarize(ex){
+  const sets=ex.sets||[];const n=sets.length;if(!n) return "";
+  const reps=[...new Set(sets.map(s=>fmt(s.r)))];
+  let out=reps.length===1&&num(reps[0])?n+"×"+reps[0]+(ex.kind==="t"?" с":""):n+" "+plural(n,"подход","подхода","подходов");
+  const mw=Math.max(...sets.map(s=>num(s.w)));
+  if(ex.kind==="wr"&&mw>0) out+=" · "+fmt(mw)+" кг";
+  return out;
+}
+const tonnage=exs=>exs.reduce((a,ex)=>a+(ex.kind==="wr"?(ex.sets||[]).reduce((b,s)=>b+num(s.w)*num(s.r),0):0),0);
+function refreshDatalist(){
+  const names=new Set(CATALOG);
+  templates.forEach(t=>(t.exercises||[]).forEach(e=>e.name&&names.add(e.name.trim())));
+  sessions.forEach(t=>(t.exercises||[]).forEach(e=>e.name&&names.add(e.name.trim())));
+  $("#exlist").innerHTML=[...names].sort((a,b)=>a.localeCompare(b,"ru")).map(n=>`<option value="${esc(n)}">`).join("");
+}
+
+/* ---------- views ---------- */
+const CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+function exBlock(ex,ei,scope,live,total){
+  const k=ex.kind||"wr";
+  const last=live?lastFor(ex.name,active&&active.startedAt):null;
+  const hint=live?`<p class="hint" data-hint>${hintHtml(last)}</p>`:"";
+  const head=`<div class="set head k-${k}"><span class="n">№</span>${k==="wr"?"<span>кг</span>":""}<span>${k==="t"?"сек":"повт"}</span>${live?"<span></span>":""}<span></span></div>`;
+  const rows=(ex.sets||[]).map((s,si)=>{
+    const prev=si>0?ex.sets[si-1]:(last&&last.ex.sets[0])||{};
+    const w=k==="wr"?`<input data-f="w" inputmode="decimal" enterkeyhint="next" value="${esc(s.w)}" placeholder="${esc(prev.w!=null&&prev.w!==""?fmt(prev.w):"0")}" aria-label="Вес, кг, подход ${si+1}">`:"";
+    const r=`<input data-f="r" inputmode="numeric" enterkeyhint="next" value="${esc(s.r)}" placeholder="${esc(prev.r!=null&&prev.r!==""?fmt(prev.r):"0")}" aria-label="${k==="t"?"Секунды":"Повторы"}, подход ${si+1}">`;
+    const chk=live?`<button class="chk" data-act="toggle-set" aria-pressed="${!!s.done}" aria-label="Подход ${si+1} выполнен">${CHECK}</button>`:"";
+    return `<div class="set k-${k}${s.done?" is-done":""}" data-si="${si}"><span class="n">${si+1}</span>${w}${r}${chk}<button class="x" data-act="del-set" aria-label="Удалить подход ${si+1}">×</button></div>`;
+  }).join("");
+  return `<section class="ex${live?"":" plan"}" data-ei="${ei}">
+    <div class="ex-head"><span class="ex-num">${ei+1}</span>
+      <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="Название упражнения" aria-label="Название упражнения">
+      <select class="kind" data-f="kind" aria-label="Что записывать">${Object.entries(KINDS).map(([v,l])=>`<option value="${v}"${v===k?" selected":""}>${l}</option>`).join("")}</select>
+    </div>${hint}
+    <div class="sets">${head}${rows}</div>
+    <div class="ex-actions"><button class="btn small" data-act="add-set">+ Подход</button>
+      <span class="row"><button class="btn ghost small" data-act="move-ex" data-d="-1" ${ei===0?"disabled":""} aria-label="Поднять выше">↑</button><button class="btn ghost small" data-act="move-ex" data-d="1" ${ei===total-1?"disabled":""} aria-label="Опустить ниже">↓</button><button class="btn ghost small" data-act="del-ex">Убрать</button></span>
+    </div></section>`;
+}
+function hintHtml(last){
+  if(!last) return "";
+  return `Прошлый раз, ${esc(dShort(last.date))}: <b class="num">${esc(last.ex.sets.map(s=>setText(last.ex,s)).join(" · "))}</b>`;
+}
+
+function viewWorkout(){
+  if(!active) return viewStart();
+  const doneSets=active.exercises.reduce((a,e)=>a+e.sets.filter(s=>s.done).length,0);
+  const allSets=active.exercises.reduce((a,e)=>a+e.sets.length,0);
+  let finish="";
+  if(ui.finishing){
+    const tpl=active.templateId&&templates.find(t=>t.id===active.templateId);
+    finish=`<div class="finish">
+      <h2>Завершить тренировку</h2>
+      <p class="muted" style="margin:0">${doneSets?`Отмечено подходов: <b>${doneSets}</b> из ${allSets}. В историю попадут только отмеченные.`:`Ни один подход не отмечен. В историю попадут все заполненные подходы.`}</p>
+      ${tpl?`<label class="check"><input type="checkbox" id="opt-keep" ${ui.keepTpl?"checked":""}><span>Обновить шаблон «${esc(tpl.name)}»: записать в него сегодняшние упражнения и веса</span></label>`:""}
+      <label class="check"><input type="checkbox" id="opt-new" ${ui.newTpl?"checked":""}><span>Сохранить как новый шаблон</span></label>
+      <input class="field" id="opt-name" placeholder="Название шаблона" value="${esc(ui.newTplName||active.name)}" ${ui.newTpl?"":"hidden"}>
+      <div class="row"><button class="btn primary" data-act="finish-save">Сохранить в историю</button><button class="btn ghost" data-act="finish-cancel">Вернуться</button></div>
+    </div>`;
+  }
+  const discard=ui.confirm==="discard"
+    ?`<span class="row"><span class="muted">Удалить запись без сохранения?</span><button class="btn danger small" data-act="discard-yes">Удалить</button><button class="btn ghost small" data-act="confirm-no">Нет</button></span>`
+    :`<button class="btn ghost small" data-act="discard-ask">Отменить тренировку</button>`;
+  return `<div data-scope="active">
+    <div class="wbar">
+      <input class="title-input" data-f="title" value="${esc(active.name)}" placeholder="Тренировка" aria-label="Название тренировки">
+      <div class="clocks">
+        <span class="clock"><span class="eyebrow">Идёт</span><span class="num" data-clock="total">${clock(Date.now()-active.startedAt)}</span></span>
+        <span class="clock rest" ${active.restFrom?"":"hidden"}><span class="eyebrow">Отдых</span><span class="num" data-clock="rest">${active.restFrom?clock(Date.now()-active.restFrom):""}</span></span>      </div>
+    </div>
+    ${active.exercises.map((ex,i)=>exBlock(ex,i,"active",true,active.exercises.length)).join("")}
+    <button class="btn block" data-act="add-ex">+ Упражнение</button>
+    <div class="section">
+      ${finish||`<button class="btn primary block" data-act="finish-open">Завершить тренировку</button>`}
+      <div class="row" style="justify-content:center">${discard}</div>
+    </div></div>`;
+}
+
+function viewStart(){
+  const sortedT=[...templates].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  const last=sessions[0];
+  const tplCards=sortedT.length?sortedT.map(t=>`<div class="card">
+      <div class="row" style="justify-content:space-between"><h3>${esc(t.name)}</h3><button class="btn primary small" data-act="start-tpl" data-id="${esc(t.id)}">Начать</button></div>
+      <div class="meta">${(t.exercises||[]).map(e=>esc(e.name)).join(" · ")||"Без упражнений"}</div></div>`).join("")
+    :`<div class="empty"><strong>Шаблонов пока нет</strong><span>Шаблон — это готовая тренировка: упражнения, подходы и веса. Его можно запускать снова и менять. Создайте свой во вкладке «Шаблоны» или добавьте два примера.</span><div class="row"><button class="btn small" data-act="tpl-new">Создать шаблон</button><button class="btn ghost small" data-act="seed">Добавить примеры</button></div></div>`;
+  return `<div class="start">
+      <div><div class="eyebrow">${esc(dLong(Date.now()))}</div><h1>Начать тренировку</h1></div>
+      <button class="btn primary block" data-act="start-empty">Пустая тренировка</button>
+      ${last?`<div class="row" style="justify-content:space-between"><span class="muted">Последняя: <b style="color:var(--ink)">${esc(last.name||"Тренировка")}</b>, ${esc(dShort(last.finishedAt))}</span><button class="btn small" data-act="repeat" data-id="${esc(last.id)}">Повторить</button></div>`:""}
+    </div>
+    <div class="section"><h2>Из шаблона</h2>${tplCards}</div>`;
+}
+
+function viewTemplates(){
+  if(editing) return viewEditor();
+  const list=[...templates].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  const lastDone=id=>{const s=sessions.find(s=>s.templateId===id);return s?dShort(s.finishedAt):null};
+  const cards=list.map(t=>{
+    const ld=lastDone(t.id);
+    const conf=ui.confirm==="tpl:"+t.id;
+    return `<div class="card">
+      <div><h3>${esc(t.name)}</h3><div class="meta">${(t.exercises||[]).length} ${plural((t.exercises||[]).length,"упражнение","упражнения","упражнений")}${ld?" · последний раз "+esc(ld):" · ещё не выполнялся"}</div></div>
+      ${(t.exercises||[]).length?`<ul class="list">${t.exercises.map(e=>`<li><span>${esc(e.name)}</span><span>${esc(summarize(e))}</span></li>`).join("")}</ul>`:""}
+      ${t.note?`<div class="meta">${esc(t.note)}</div>`:""}
+      <div class="row">${conf
+        ?`<span class="muted">Удалить шаблон? История останется.</span><button class="btn danger small" data-act="tpl-del-yes" data-id="${esc(t.id)}">Удалить</button><button class="btn ghost small" data-act="confirm-no">Нет</button>`
+        :`<button class="btn primary small" data-act="start-tpl" data-id="${esc(t.id)}">Начать</button><button class="btn small" data-act="tpl-edit" data-id="${esc(t.id)}">Изменить</button><button class="btn ghost small" data-act="tpl-copy" data-id="${esc(t.id)}">Копия</button><button class="btn ghost small" data-act="tpl-del-ask" data-id="${esc(t.id)}">Удалить</button>`}</div>
+    </div>`}).join("");
+  return `<div class="row" style="justify-content:space-between;margin-bottom:12px"><h1>Шаблоны</h1><button class="btn primary" data-act="tpl-new">+ Новый</button></div>
+    <div class="stack">${cards||`<div class="empty"><strong>Здесь будут ваши тренировки-заготовки</strong><span>Например, «Ноги и ягодицы» или «Верх тела». После тренировки шаблон можно обновить сегодняшними весами.</span><div class="row"><button class="btn small" data-act="tpl-new">Создать шаблон</button><button class="btn ghost small" data-act="seed">Добавить примеры</button></div></div>`}</div>`;
+}
+
+function viewEditor(){
+  const d=editing.data;
+  return `<div data-scope="edit">
+    <div class="eyebrow" style="margin-bottom:6px">${editing.isNew?"Новый шаблон":"Изменение шаблона"}</div>
+    <input class="title-input" data-f="title" value="${esc(d.name)}" placeholder="Название шаблона" aria-label="Название шаблона" style="margin-bottom:10px">
+    <textarea class="field" data-f="note" placeholder="Заметка: разминка, темп, отдых между подходами" style="margin-bottom:14px">${esc(d.note||"")}</textarea>
+    ${d.exercises.map((ex,i)=>exBlock(ex,i,"edit",false,d.exercises.length)).join("")}
+    <button class="btn block" data-act="add-ex">+ Упражнение</button>
+    <div class="row" style="margin-top:18px"><button class="btn primary" data-act="edit-save">Сохранить шаблон</button><button class="btn ghost" data-act="edit-cancel">Отмена</button></div>
+  </div>`;
+}
+
+function viewHistory(){
+  if(!sessions.length) return `<h1 style="margin-bottom:12px">История</h1><div class="empty"><strong>Пока пусто</strong><span>Завершённые тренировки появятся здесь: дата, длительность и все подходы.</span></div>`+viewBackup();
+  const now=new Date();
+  const thisMonth=sessions.filter(s=>{const d=new Date(s.finishedAt);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;
+  const weekAgo=Date.now()-7*864e5;
+  const week=sessions.filter(s=>s.finishedAt>=weekAgo).length;
+  let html=`<h1 style="margin-bottom:12px">История</h1>
+    <div class="stats"><div class="stat"><span class="num">${week}</span><span>за 7 дней</span></div><div class="stat"><span class="num">${thisMonth}</span><span>в этом месяце</span></div><div class="stat"><span class="num">${sessions.length}</span><span>всего</span></div></div>
+    ${viewCalendar()}
+    <div class="stack" style="margin-top:12px">`;
+  let month="";
+  sessions.forEach(s=>{
+    const m=new Date(s.finishedAt).toLocaleDateString("ru-RU",{month:"long",year:"numeric"});
+    if(m!==month){month=m;html+=`<div class="month">${esc(m)}</div>`}
+    const mins=Math.max(1,Math.round((s.finishedAt-s.startedAt)/60000));
+    const conf=ui.confirm==="ses:"+s.id;
+    html+=`<details class="card hist"><summary><div><h3>${esc(s.name||"Тренировка")}</h3><div class="meta">${esc(dLong(s.finishedAt))} · ${mins} мин</div></div><span class="chev">▶</span></summary>
+      <div class="detail">${(s.exercises||[]).map(e=>`<div class="dex"><span>${esc(e.name)}</span><span class="dsets">${esc(e.sets.map(x=>setText(e,x)).join(" · "))}</span></div>`).join("")}
+      ${s.note?`<div class="meta">${esc(s.note)}</div>`:""}
+      <div class="row">${conf
+        ?`<span class="muted">Удалить из истории?</span><button class="btn danger small" data-act="ses-del-yes" data-id="${esc(s.id)}">Удалить</button><button class="btn ghost small" data-act="confirm-no">Нет</button>`
+        :`<button class="btn small" data-act="repeat" data-id="${esc(s.id)}">Повторить</button><button class="btn small" data-act="ses-to-tpl" data-id="${esc(s.id)}">Сделать шаблоном</button><button class="btn ghost small" data-act="ses-del-ask" data-id="${esc(s.id)}">Удалить</button>`}</div></div></details>`;
+  });
+  return html+"</div>"+viewBackup();
+}
+
+function viewCalendar(){
+  const y=cal.y,m=cal.m,first=new Date(y,m,1),off=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+  const counts={};sessions.forEach(s=>{const k=dayKey(s.finishedAt);counts[k]=(counts[k]||0)+1});
+  const todayK=dayKey(Date.now());
+  const title=first.toLocaleDateString("ru-RU",{month:"long",year:"numeric"}).replace(" г.","");
+  let cells=["пн","вт","ср","чт","пт","сб","вс"].map(w=>`<div class="cal-wd">${w}</div>`).join("");
+  for(let i=0;i<off;i++)cells+=`<span class="day out" aria-hidden="true"></span>`;
+  for(let d=1;d<=days;d++){
+    const k=y+"-"+m+"-"+d,c=counts[k]||0,cls="day"+(c?" has-w":"")+(k===todayK?" today":"");
+    cells+=c?`<button class="${cls}" data-act="day" data-key="${k}" aria-describedby="tip">${d}${c>1?`<span class="cnt">${c}</span>`:""}</button>`:`<span class="${cls}">${d}</span>`;
+  }
+  return `<div class="cal"><div class="cal-head"><button class="btn ghost small" data-act="cal" data-d="-1" aria-label="Предыдущий месяц">‹</button><h3>${esc(title)}</h3><button class="btn ghost small" data-act="cal" data-d="1" aria-label="Следующий месяц">›</button></div><div class="cal-grid">${cells}</div></div>`;
+}
+function showTip(el){
+  const list=sessions.filter(s=>dayKey(s.finishedAt)===el.dataset.key).sort((a,b)=>a.finishedAt-b.finishedAt);
+  if(!list.length)return;
+  const tip=$("#tip");
+  tip.innerHTML=`<div class="td">${esc(dLong(list[0].finishedAt))}</div>`+list.map(s=>`<div>${esc(s.name||"Тренировка")}</div>`).join("");
+  tip.hidden=false;
+  const r=el.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;
+  let left=Math.min(Math.max(8,r.left+r.width/2-tw/2),window.innerWidth-tw-8);
+  let top=r.top-th-8;if(top<8)top=r.bottom+8;
+  tip.style.left=left+"px";tip.style.top=top+"px";
+}
+const hideTip=()=>{$("#tip").hidden=true};
+document.addEventListener("mouseover",e=>{const d=e.target.closest&&e.target.closest(".day.has-w");if(d)showTip(d)});
+document.addEventListener("mouseout",e=>{const d=e.target.closest&&e.target.closest(".day.has-w");if(d&&!(e.relatedTarget&&d.contains(e.relatedTarget)))hideTip()});
+document.addEventListener("focusin",e=>{if(e.target.matches(".day.has-w"))showTip(e.target)});
+document.addEventListener("focusout",e=>{if(e.target.matches(".day.has-w"))hideTip()});
+window.addEventListener("scroll",hideTip,{passive:true});
+
+const openDetails=new Set();
+function render(){
+  hideTip();
+  document.querySelectorAll("details.hist[open] [data-act='repeat']").forEach(b=>openDetails.add(b.dataset.id));
+  ["workout","templates","history"].forEach(t=>{const b=$("#tab-"+t);b.setAttribute("aria-current",String(t===tab));});
+  $("#tab-workout").innerHTML="Тренировка"+(active?'<span class="dot" aria-label="идёт"></span>':"");
+  const b=$("#banner");
+  const standalone=window.navigator.standalone===true||matchMedia("(display-mode: standalone)").matches;
+  const ios=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  b.innerHTML=(!standalone&&ios&&!LS.get("podhod:hideInstall",false))
+    ?`<div class="banner"><b>Установите приложение:</b> в Safari нажмите «Поделиться», затем «На экран „Домой“». Тренировки, записанные в браузере, в установленное приложение не перенесутся. <button class="btn ghost small" data-act="hide-install">Понятно</button></div>`:"";
+  if(!(ready.templates&&ready.sessions&&ready.active)){$("#main").innerHTML='<p class="muted">Загружаю ваши тренировки…</p>';return}
+  $("#main").innerHTML=tab==="workout"?viewWorkout():tab==="templates"?viewTemplates():viewHistory();
+  document.querySelectorAll("details.hist").forEach(d=>{const r=d.querySelector("[data-act='repeat']");if(r&&openDetails.has(r.dataset.id))d.open=true});
+  document.querySelectorAll("details.hist").forEach(d=>d.addEventListener("toggle",()=>{const r=d.querySelector("[data-act='repeat']");if(r&&!d.open)openDetails.delete(r.dataset.id)}));
+}
+
+/* ---------- actions ---------- */
+const scopeObj=el=>{const s=el.closest("[data-scope]");if(!s)return null;return s.dataset.scope==="active"?active:(editing&&editing.data)};
+const touched=el=>{const s=el.closest("[data-scope]");if(s&&s.dataset.scope==="active")saveActiveSoon()};
+const planFrom=exs=>exs.map(e=>({name:e.name,kind:e.kind||"wr",sets:(e.sets||[]).map(s=>({w:s.w==null?"":s.w,r:s.r==null?"":s.r}))}));
+let wake=null;
+async function keepAwake(){try{if(active&&navigator.wakeLock&&document.visibilityState==="visible")wake=await navigator.wakeLock.request("screen")}catch(e){}}
+document.addEventListener("visibilitychange",keepAwake);
+
+function startWorkout(name,exs,templateId){
+  if(active){tab="workout";render();toast("Сначала завершите текущую тренировку");return}
+  active={id:uid(),name:name||"Тренировка",templateId:templateId||null,startedAt:Date.now(),restFrom:null,
+    exercises:(exs&&exs.length?exs:[{name:"",kind:"wr",sets:[{w:"",r:""}]}]).map(e=>({name:e.name,kind:e.kind||"wr",sets:(e.sets&&e.sets.length?e.sets:[{w:"",r:""}]).map(s=>({w:s.w==null?"":s.w,r:s.r==null?"":s.r,done:false}))}))};
+  ui.finishing=false;ui.confirm=null;tab="workout";LS.set("podhod:tab",tab);flushActive();render();window.scrollTo(0,0);keepAwake();
+}
+
+async function finishSave(){
+  const anyDone=active.exercises.some(e=>e.sets.some(s=>s.done));
+  const exs=active.exercises.map(e=>({name:(e.name||"").trim()||"Упражнение",kind:e.kind||"wr",
+      sets:e.sets.filter(s=>anyDone?s.done:(String(s.w).trim()!==""||String(s.r).trim()!=="")).map(s=>({w:s.w,r:s.r}))}))
+    .filter(e=>e.sets.length);
+  if(!exs.length){toast("Заполните хотя бы один подход");return}
+  const keep=$("#opt-keep")&&$("#opt-keep").checked, mk=$("#opt-new")&&$("#opt-new").checked, nm=($("#opt-name")&&$("#opt-name").value.trim())||active.name;
+  const ses={name:(active.name||"").trim()||"Тренировка",templateId:active.templateId,startedAt:active.startedAt,finishedAt:Date.now(),exercises:exs};
+  try{
+    await store.put("sessions",active.id,ses);
+    if(keep){const t=templates.find(t=>t.id===active.templateId);if(t)await store.put("templates",t.id,Object.assign({},t,{exercises:planFrom(exs),updatedAt:Date.now()}))}
+    if(mk) await store.put("templates",uid(),{name:nm,note:"",exercises:planFrom(exs),updatedAt:Date.now()});
+  }catch(e){saveErr(e);return}
+  active=null;ui.finishing=false;ui.keepTpl=false;ui.newTpl=false;ui.newTplName="";flushActive();
+  try{wake&&wake.release()}catch(e){} wake=null;
+  tab="history";LS.set("podhod:tab",tab);render();window.scrollTo(0,0);toast("Тренировка сохранена");
+}
+
+function seed(){
+  const now=Date.now();
+  const t1={name:"Пример: ноги и ягодицы",note:"Пример шаблона, можно изменить или удалить. Отдых 2 мин.",updatedAt:now,exercises:[
+    {name:"Приседания со штангой",kind:"wr",sets:[{w:30,r:10},{w:40,r:8},{w:40,r:8},{w:40,r:8}]},
+    {name:"Румынская тяга",kind:"wr",sets:[{w:30,r:10},{w:30,r:10},{w:30,r:10}]},
+    {name:"Ягодичный мост со штангой",kind:"wr",sets:[{w:40,r:12},{w:40,r:12},{w:40,r:12}]},
+    {name:"Болгарские сплит-приседания",kind:"wr",sets:[{w:6,r:10},{w:6,r:10},{w:6,r:10}]},
+    {name:"Планка",kind:"t",sets:[{w:"",r:45},{w:"",r:45}]}]};
+  const t2={name:"Пример: верх тела",note:"Пример шаблона, можно изменить или удалить.",updatedAt:now-1,exercises:[
+    {name:"Жим гантелей на наклонной скамье",kind:"wr",sets:[{w:8,r:10},{w:8,r:10},{w:8,r:10}]},
+    {name:"Тяга верхнего блока",kind:"wr",sets:[{w:30,r:12},{w:30,r:12},{w:30,r:12}]},
+    {name:"Разведения гантелей в стороны",kind:"wr",sets:[{w:4,r:15},{w:4,r:15},{w:4,r:15}]},
+    {name:"Отжимания",kind:"r",sets:[{w:"",r:10},{w:"",r:10}]}]};
+  Promise.all([store.put("templates",uid(),t1),store.put("templates",uid(),t2)]).then(()=>toast("Добавлены два примера")).catch(saveErr);
+}
+
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-act]");
+  if(!el||el.dataset.act!=="day")hideTip();
+  if(!el)return;
+  const a=el.dataset.act,id=el.dataset.id;
+  const obj=scopeObj(el);
+  const exEl=el.closest("[data-ei]"),ei=exEl?+exEl.dataset.ei:-1;
+  const ex=obj&&ei>=0?obj.exercises[ei]:null;
+  const siEl=el.closest("[data-si]"),si=siEl?+siEl.dataset.si:-1;
+  switch(a){
+    case "tab": tab=el.dataset.tab;LS.set("podhod:tab",tab);ui.confirm=null;render();window.scrollTo(0,0);return;
+    case "start-empty": return startWorkout("Тренировка",null,null);
+    case "start-tpl":{const t=templates.find(t=>t.id===id);if(t)startWorkout(t.name,clone(t.exercises||[]),t.id);return}
+    case "repeat":{const s=sessions.find(s=>s.id===id);if(s)startWorkout(s.name,clone(s.exercises||[]),s.templateId&&templates.some(t=>t.id===s.templateId)?s.templateId:null);return}
+    case "add-ex":{obj.exercises.push({name:"",kind:"wr",sets:[{w:"",r:"",done:false}]});touched(el);render();const ins=document.querySelectorAll(".ex-name");ins[ins.length-1]&&ins[ins.length-1].focus();return}
+    case "del-ex": obj.exercises.splice(ei,1);touched(el);render();return;
+    case "move-ex":{const j=ei+(+el.dataset.d);if(j<0||j>=obj.exercises.length)return;const t=obj.exercises[ei];obj.exercises[ei]=obj.exercises[j];obj.exercises[j]=t;touched(el);render();return}
+    case "add-set":{const l=ex.sets[ex.sets.length-1]||{w:"",r:""};ex.sets.push({w:l.w,r:l.r,done:false});touched(el);render();return}
+    case "del-set": ex.sets.splice(si,1);touched(el);render();return;
+    case "toggle-set":{
+      const s=ex.sets[si];
+      if(!s.done){siEl.querySelectorAll("input").forEach(inp=>{if(inp.value.trim()===""&&inp.placeholder&&inp.placeholder!=="0")s[inp.dataset.f]=inp.placeholder.replace(",",".")});s.done=true;active.restFrom=Date.now()}
+      else s.done=false;
+      saveActiveSoon();render();return}
+    case "finish-open": ui.finishing=true;ui.keepTpl=false;ui.newTpl=false;ui.newTplName=active.name;render();return;
+    case "finish-cancel": ui.finishing=false;render();return;
+    case "finish-save": finishSave();return;
+    case "discard-ask": ui.confirm="discard";render();return;
+    case "discard-yes": active=null;ui.confirm=null;ui.finishing=false;flushActive();try{wake&&wake.release()}catch(e){}wake=null;render();toast("Тренировка отменена");return;
+    case "confirm-no": ui.confirm=null;render();return;
+    case "tpl-new": editing={id:uid(),isNew:true,data:{name:"",note:"",exercises:[{name:"",kind:"wr",sets:[{w:"",r:""},{w:"",r:""},{w:"",r:""}]}]}};tab="templates";render();window.scrollTo(0,0);return;
+    case "tpl-edit":{const t=templates.find(t=>t.id===id);if(!t)return;editing={id:t.id,isNew:false,data:clone({name:t.name,note:t.note||"",exercises:t.exercises||[]})};render();window.scrollTo(0,0);return}
+    case "tpl-copy":{const t=templates.find(t=>t.id===id);if(!t)return;store.put("templates",uid(),{name:t.name+" (копия)",note:t.note||"",exercises:clone(t.exercises||[]),updatedAt:Date.now()}).then(()=>toast("Копия создана")).catch(saveErr);return}
+    case "tpl-del-ask": ui.confirm="tpl:"+id;render();return;
+    case "tpl-del-yes": ui.confirm=null;store.remove("templates",id).then(()=>toast("Шаблон удалён")).catch(saveErr);return;
+    case "edit-save":{
+      const d=editing.data;if(!d.name.trim()){toast("Дайте шаблону название");const ti=document.querySelector("[data-scope='edit'] .title-input");ti&&ti.focus();return}
+      const body={name:d.name.trim(),note:(d.note||"").trim(),exercises:planFrom(d.exercises.filter(e=>(e.name||"").trim()||e.sets.length).map(e=>Object.assign({},e,{name:(e.name||"").trim()||"Упражнение"}))),updatedAt:Date.now()};
+      store.put("templates",editing.id,body).then(()=>{editing=null;render();toast("Шаблон сохранён")}).catch(saveErr);return}
+    case "edit-cancel": editing=null;render();return;
+    case "ses-del-ask": ui.confirm="ses:"+id;render();return;
+    case "ses-del-yes": ui.confirm=null;store.remove("sessions",id).then(()=>toast("Удалено из истории")).catch(saveErr);return;
+    case "ses-to-tpl":{const s=sessions.find(s=>s.id===id);if(!s)return;editing={id:uid(),isNew:true,data:{name:s.name||"",note:"",exercises:planFrom(s.exercises||[])}};tab="templates";LS.set("podhod:tab",tab);render();window.scrollTo(0,0);return}
+    case "seed": seed();return;
+    case "day": showTip(el);return;
+    case "backup-export": exportData();return;
+    case "backup-import": $("#import-file").click();return;
+    case "hide-install": LS.set("podhod:hideInstall",true);render();return;
+    case "cal":{cal.m+=+el.dataset.d;if(cal.m<0){cal.m=11;cal.y--}if(cal.m>11){cal.m=0;cal.y++}render();return}
+  }
+});
+$("#import-file").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];if(f)importData(f);e.target.value=""});
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="import-file")return;
+  if(el.id==="opt-new"){ui.newTpl=el.checked;$("#opt-name").hidden=!el.checked;return}
+  if(el.id==="opt-keep"){ui.keepTpl=el.checked;return}
+  if(el.id==="opt-name"){ui.newTplName=el.value;return}
+  const f=el.dataset.f;if(!f)return;
+  const obj=scopeObj(el);if(!obj)return;
+  if(f==="title")obj.name=el.value;
+  else if(f==="note")obj.note=el.value;
+  else{
+    const ex=obj.exercises[+el.closest("[data-ei]").dataset.ei];
+    if(f==="name")ex.name=el.value;
+    else if(f==="kind"){ex.kind=el.value;touched(el);render();return}
+    else{ex.sets[+el.closest("[data-si]").dataset.si][f]=el.value.replace(",",".")}
+  }
+  touched(el);
+});
+document.addEventListener("change",e=>{
+  const el=e.target;if(el.dataset.f!=="name")return;
+  const s=el.closest("[data-scope='active']");if(!s)return;
+  const h=el.closest("[data-ei]").querySelector("[data-hint]");if(h)h.innerHTML=hintHtml(lastFor(el.value,active&&active.startedAt));
+});
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Enter"||!e.target.matches(".set input"))return;
+  e.preventDefault();const all=[...document.querySelectorAll(".set input")];const i=all.indexOf(e.target);(all[i+1]||e.target).focus();
+});
+setInterval(()=>{
+  if(!active)return;
+  const t=document.querySelector("[data-clock='total']");if(t)t.textContent=clock(Date.now()-active.startedAt);
+  const r=document.querySelector("[data-clock='rest']");if(r&&active.restFrom){r.textContent=clock(Date.now()-active.restFrom);r.parentElement.hidden=false}
+},1000);
+
+/* ---------- boot ---------- */
+$("#today").textContent=new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
+(async function boot(){
+  await store.init();
+  store.subscribe("templates",docs=>{templates=docs;ready.templates=true;refreshDatalist();if(ready.active)render()});
+  store.subscribe("sessions",docs=>{sessions=docs.sort((a,b)=>(b.finishedAt||0)-(a.finishedAt||0));ready.sessions=true;refreshDatalist();if(ready.active)render()});
+  try{active=await store.getActive()}catch(e){active=null}
+  ready.active=true;render();if(active)keepAwake();
+})();
+if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+})();
+</script>
+</body>
+</html>
