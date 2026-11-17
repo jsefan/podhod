@@ -568,7 +568,7 @@ document.addEventListener("click",e=>{
     case "add-ex":{obj.exercises.push({name:"",kind:"wr",sets:[{w:"",r:"",done:false}]});touched(el);render();const ins=document.querySelectorAll(".ex-name");ins[ins.length-1]&&ins[ins.length-1].focus();return}
     case "del-ex": obj.exercises.splice(ei,1);touched(el);render();return;
     case "move-ex":{const j=ei+(+el.dataset.d);if(j<0||j>=obj.exercises.length)return;const t=obj.exercises[ei];obj.exercises[ei]=obj.exercises[j];obj.exercises[j]=t;touched(el);render();return}
-    case "add-set":{const l=ex.sets[ex.sets.length-1]||{w:"",r:""};ex.sets.push({w:l.w,r:l.r,done:false,drops:(l.drops||[]).map(d=>({w:d.w,r:d.r}))});touched(el);render();return}
+    case "add-set":{const l=ex.sets[ex.sets.length-1]||{w:"",r:""};ex.sets.push({w:l.w,r:l.r,done:false});touched(el);render();return}
     case "add-drop":{const s=ex.sets[si];s.drops=s.drops||[];s.drops.push({w:"",r:""});touched(el);render();
       const inp=document.querySelector(`[data-ei="${ei}"] [data-si="${si}"] [data-di="${s.drops.length-1}"] input`);inp&&inp.focus();return}
     case "del-drop":{const di=+el.closest("[data-di]").dataset.di;ex.sets[si].drops.splice(di,1);touched(el);render();return}
