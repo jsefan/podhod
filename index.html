@@ -111,6 +111,9 @@ button{cursor:pointer}
 .set.k-r,.set.k-t{grid-template-columns:24px 1fr 46px 28px}
 .plan .set{grid-template-columns:24px 1fr 1fr 38px 28px}
 .plan .set.k-r,.plan .set.k-t{grid-template-columns:24px 1fr 28px}
+.set.k-c{grid-template-columns:1fr 1fr 46px}
+.plan .set.k-c{grid-template-columns:1fr 1fr}
+.add-row>.btn{flex:1}
 .setgrp{display:flex;flex-direction:column;gap:4px}
 .set.drop input{min-height:38px;font-size:19px}
 .set.drop .n{color:var(--accent);font-size:16px}
@@ -218,7 +221,7 @@ en:{
   backupH:"Backup", backupMeta:"Your workouts are stored only on this phone. Save a copy to Files or iCloud Drive so nothing is lost when you change phones.",
   lastBackup:d=>` Last backup: ${d}.`, noBackup:" No backups yet.", backupSave:"Save a copy", backupRestore:"Restore from file", backupSaved:"Copy saved",
   restored:(ns,nt)=>`Restored: ${ns} ${pl(ns,"ses")}, ${nt} ${pl(nt,"tpl")}`, notBackup:"This isn’t a Podhod backup file",
-  kinds:{wr:"kg × reps",r:"reps",t:"seconds"}, kg:"kg", reps:"reps", sec:"sec", secShort:"s", colNo:"#",
+  kinds:{wr:"kg × reps",r:"reps",t:"seconds",c:"cardio"}, km:"km", aMin:"Minutes", aKm:"Distance, km", addCardio:"+ Cardio", cardioW:"Cardio", cardioName:"Running", aCardioDone:"Cardio done", kg:"kg", reps:"reps", sec:"sec", secShort:"s", colNo:"#",
   aW:si=>`Weight, kg, set ${si}`, aR:si=>`Reps, set ${si}`, aS:si=>`Seconds, set ${si}`, aDone:si=>`Set ${si} done`,
   aDropAdd:si=>`Add a drop to set ${si}`, dropTitle:"Drop: lower the weight and keep going", aDropW:(di,si)=>`Drop ${di}, weight, set ${si}`, aDropR:(di,si)=>`Drop ${di}, reps, set ${si}`, aDropDel:di=>`Delete drop ${di}`, aSetDel:si=>`Delete set ${si}`,
   exName:"Exercise name", kindAria:"What to log", addSet:"+ Set", moveUp:"Move up", moveDown:"Move down", remove:"Remove",
@@ -240,6 +243,7 @@ en:{
   nameTpl:"Give the template a name", tplSaved:"Template saved", delFromHist:"Deleted from history", samplesAdded:"Two examples added", drop:"drop",
   forms:{ses:["workout","workouts"],tpl:["template","templates"],ex:["exercise","exercises"],set:["set","sets"]},
   catalog:["Back Squat","Goblet Squat","Leg Press","Bulgarian Split Squat","Dumbbell Lunge","Romanian Deadlift","Deadlift","Barbell Hip Thrust","Cable Kickback","Leg Extension","Leg Curl","Calf Raise","Bench Press","Incline Dumbbell Press","Push-up","Dip","Overhead Press","Lateral Raise","Pull-up","Lat Pulldown","Seated Cable Row","Barbell Row","One-arm Dumbbell Row","Back Extension","Barbell Curl","Hammer Curl","Skull Crusher","Triceps Pushdown","Plank","Crunch"],
+  cardio:["Running","Treadmill","Walking","Incline Walk","Stationary Bike","Cycling","Elliptical","Rowing Machine","Stair Climber","Jump Rope","Swimming"],
   samples:[
     {name:"Example: legs & glutes",note:"Example template. Edit or delete it. Rest 2 min.",exercises:[
       {name:"Back Squat",kind:"wr",sets:[{w:30,r:10},{w:40,r:8},{w:40,r:8},{w:40,r:8}]},
@@ -260,7 +264,7 @@ ru:{
   backupH:"Резервная копия", backupMeta:"Тренировки хранятся только на этом телефоне. Сохраняйте копию в «Файлы» или iCloud Drive, чтобы ничего не потерять при смене телефона.",
   lastBackup:d=>` Последняя копия: ${d}.`, noBackup:" Копий ещё не было.", backupSave:"Сохранить копию", backupRestore:"Восстановить из файла", backupSaved:"Копия сохранена",
   restored:(ns,nt)=>`Восстановлено: ${ns} ${pl(ns,"ses")}, ${nt} ${pl(nt,"tpl")}`, notBackup:"Это не файл копии «Подхода»",
-  kinds:{wr:"кг × повт",r:"повторы",t:"секунды"}, kg:"кг", reps:"повт", sec:"сек", secShort:"с", colNo:"№",
+  kinds:{wr:"кг × повт",r:"повторы",t:"секунды",c:"кардио"}, km:"км", aMin:"Минуты", aKm:"Дистанция, км", addCardio:"+ Кардио", cardioW:"Кардио", cardioName:"Бег", aCardioDone:"Кардио выполнено", kg:"кг", reps:"повт", sec:"сек", secShort:"с", colNo:"№",
   aW:si=>`Вес, кг, подход ${si}`, aR:si=>`Повторы, подход ${si}`, aS:si=>`Секунды, подход ${si}`, aDone:si=>`Подход ${si} выполнен`,
   aDropAdd:si=>`Добавить дроп к подходу ${si}`, dropTitle:"Дроп: снизить вес и продолжить подход", aDropW:(di,si)=>`Дроп ${di}, вес, подход ${si}`, aDropR:(di,si)=>`Дроп ${di}, повторы, подход ${si}`, aDropDel:di=>`Удалить дроп ${di}`, aSetDel:si=>`Удалить подход ${si}`,
   exName:"Название упражнения", kindAria:"Что записывать", addSet:"+ Подход", moveUp:"Поднять выше", moveDown:"Опустить ниже", remove:"Убрать",
@@ -282,6 +286,7 @@ ru:{
   nameTpl:"Дайте шаблону название", tplSaved:"Шаблон сохранён", delFromHist:"Удалено из истории", samplesAdded:"Добавлены два примера", drop:"дроп",
   forms:{ses:["тренировка","тренировки","тренировок"],tpl:["шаблон","шаблона","шаблонов"],ex:["упражнение","упражнения","упражнений"],set:["подход","подхода","подходов"]},
   catalog:["Приседания со штангой","Гоблет-приседания","Жим ногами","Болгарские сплит-приседания","Выпады с гантелями","Румынская тяга","Становая тяга","Ягодичный мост со штангой","Отведение ноги в кроссовере","Разгибания ног в тренажёре","Сгибания ног в тренажёре","Подъёмы на носки","Жим лёжа","Жим гантелей на наклонной скамье","Отжимания","Отжимания на брусьях","Жим стоя","Разведения гантелей в стороны","Подтягивания","Тяга верхнего блока","Тяга горизонтального блока","Тяга штанги в наклоне","Тяга гантели в наклоне","Гиперэкстензия","Сгибания рук со штангой","Молотки","Французский жим","Разгибания рук на блоке","Планка","Скручивания"],
+  cardio:["Бег","Беговая дорожка","Ходьба","Ходьба в горку","Велотренажёр","Велосипед","Эллипс","Гребной тренажёр","Степпер","Скакалка","Плавание"],
   samples:[
     {name:"Пример: ноги и ягодицы",note:"Пример шаблона, можно изменить или удалить. Отдых 2 мин.",exercises:[
       {name:"Приседания со штангой",kind:"wr",sets:[{w:30,r:10},{w:40,r:8},{w:40,r:8},{w:40,r:8}]},
@@ -383,13 +388,21 @@ function lastFor(name,beforeTs){
     const ex=(s.exercises||[]).find(e=>norm(e.name)===n); if(ex) return {date:s.finishedAt,ex};}
   return null;
 }
+function cardioText(s){
+  const L=T(),p=[];
+  if(num(s.r))p.push(fmt(s.r)+" "+L.min);
+  if(num(s.w))p.push(fmt(s.w)+" "+L.km);
+  return p.join(" · ");
+}
 function setText(ex,s){
+  if(ex.kind==="c") return cardioText(s);
   if(ex.kind==="t") return fmt(s.r)+" "+T().secShort;
   if(ex.kind==="r") return fmt(s.r);
   return [s,...(s.drops||[])].map(x=>(num(x.w)?fmt(x.w)+T().kg+" × ":"")+fmt(x.r)).join(" → ");
 }
 function summarize(ex){
   const sets=ex.sets||[];const n=sets.length;if(!n) return "";
+  if(ex.kind==="c") return cardioText(sets[0])||T().kinds.c;
   const reps=[...new Set(sets.map(s=>fmt(s.r)))];
   let out=reps.length===1&&num(reps[0])?n+"×"+reps[0]+(ex.kind==="t"?" "+T().secShort:""):n+" "+pl(n,"set");
   const mw=Math.max(...sets.map(s=>num(s.w)));
@@ -398,7 +411,7 @@ function summarize(ex){
   return out;
 }
 function refreshDatalist(){
-  const names=new Set(T().catalog);
+  const names=new Set([...T().catalog,...T().cardio]);
   templates.forEach(t=>(t.exercises||[]).forEach(e=>e.name&&names.add(e.name.trim())));
   sessions.forEach(t=>(t.exercises||[]).forEach(e=>e.name&&names.add(e.name.trim())));
   $("#exlist").innerHTML=[...names].sort((a,b)=>a.localeCompare(b,lang)).map(n=>`<option value="${esc(n)}">`).join("");
@@ -411,6 +424,7 @@ function exBlock(ex,ei,scope,live,total){
   const L=T(),k=ex.kind||"wr";
   const last=live?lastFor(ex.name,active&&active.startedAt):null;
   const hint=live?`<p class="hint" data-hint>${hintHtml(last)}</p>`:"";
+  if(k==="c") return cardioBlock(ex,ei,live,total,hint);
   const head=`<div class="set head k-${k}"><span class="n">${L.colNo}</span>${k==="wr"?`<span>${L.kg}</span>`:""}<span>${k==="t"?L.sec:L.reps}</span>${k==="wr"?"<span></span>":""}${live?"<span></span>":""}<span></span></div>`;
   const rows=(ex.sets||[]).map((s,si)=>{
     const n=si+1;
@@ -432,6 +446,22 @@ function exBlock(ex,ei,scope,live,total){
     </div>${hint}
     <div class="sets">${head}${rows}</div>
     <div class="ex-actions"><button class="btn small" data-act="add-set">${L.addSet}</button>
+      <span class="row"><button class="btn ghost small" data-act="move-ex" data-d="-1" ${ei===0?"disabled":""} aria-label="${L.moveUp}">↑</button><button class="btn ghost small" data-act="move-ex" data-d="1" ${ei===total-1?"disabled":""} aria-label="${L.moveDown}">↓</button><button class="btn ghost small" data-act="del-ex">${L.remove}</button></span>
+    </div></section>`;
+}
+function cardioBlock(ex,ei,live,total,hint){
+  const L=T(),s=(ex.sets&&ex.sets[0])||{w:"",r:""};
+  const chk=live?`<button class="chk" data-act="toggle-set" aria-pressed="${!!s.done}" aria-label="${esc(L.aCardioDone)}">${CHECK}</button>`:"";
+  return `<section class="ex${live?"":" plan"}" data-ei="${ei}">
+    <div class="ex-head"><span class="ex-num">${ei+1}</span>
+      <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="${L.exName}" aria-label="${L.exName}">
+      <select class="kind" data-f="kind" aria-label="${L.kindAria}">${Object.entries(L.kinds).map(([v,l])=>`<option value="${v}"${v==="c"?" selected":""}>${l}</option>`).join("")}</select>
+    </div>${hint}
+    <div class="sets"><div class="set head k-c"><span>${L.min}</span><span>${L.km}</span>${live?"<span></span>":""}</div>
+      <div class="setgrp" data-si="0"><div class="set main k-c${s.done?" is-done":""}">
+        <input data-f="r" inputmode="decimal" enterkeyhint="next" value="${esc(s.r)}" placeholder="${L.min}" aria-label="${esc(L.aMin)}">
+        <input data-f="w" inputmode="decimal" enterkeyhint="done" value="${esc(s.w)}" placeholder="${L.km}" aria-label="${esc(L.aKm)}">${chk}</div></div></div>
+    <div class="ex-actions"><span></span>
       <span class="row"><button class="btn ghost small" data-act="move-ex" data-d="-1" ${ei===0?"disabled":""} aria-label="${L.moveUp}">↑</button><button class="btn ghost small" data-act="move-ex" data-d="1" ${ei===total-1?"disabled":""} aria-label="${L.moveDown}">↓</button><button class="btn ghost small" data-act="del-ex">${L.remove}</button></span>
     </div></section>`;
 }
@@ -469,7 +499,7 @@ function viewWorkout(){
       </div>
     </div>
     ${active.exercises.map((ex,i)=>exBlock(ex,i,"active",true,active.exercises.length)).join("")}
-    <button class="btn block" data-act="add-ex">${L.addEx}</button>
+    <div class="row add-row"><button class="btn" data-act="add-ex">${L.addEx}</button><button class="btn" data-act="add-cardio">${L.addCardio}</button></div>
     <div class="section">
       ${finish||`<button class="btn primary block" data-act="finish-open">${L.finishBtn}</button>`}
       <div class="row" style="justify-content:center">${discard}</div>
@@ -486,7 +516,7 @@ function viewStart(){
     :`<div class="empty"><strong>${L.noTplH}</strong><span>${L.noTplT}</span><div class="row"><button class="btn small" data-act="tpl-new">${L.createTpl}</button><button class="btn ghost small" data-act="seed">${L.addSamples}</button></div></div>`;
   return `<div class="start">
       <div><div class="eyebrow">${esc(dLong(Date.now()))}</div><h1>${L.startH}</h1></div>
-      <button class="btn primary block" data-act="start-empty">${L.emptyWorkout}</button>
+      <div class="row add-row"><button class="btn primary" data-act="start-empty">${L.emptyWorkout}</button><button class="btn" data-act="start-cardio">${L.cardioW}</button></div>
       ${last?`<div class="row" style="justify-content:space-between"><span class="muted">${L.lastW} <b style="color:var(--ink)">${esc(last.name||L.workout)}</b>, ${esc(dShort(last.finishedAt))}</span><button class="btn small" data-act="repeat" data-id="${esc(last.id)}">${L.repeat}</button></div>`:""}
     </div>
     <div class="section"><h2>${L.fromTpl}</h2>${tplCards}</div>`;
@@ -519,7 +549,7 @@ function viewEditor(){
     <input class="title-input" data-f="title" value="${esc(d.name)}" placeholder="${L.tplName}" aria-label="${L.tplName}" style="margin-bottom:10px">
     <textarea class="field" data-f="note" placeholder="${L.notePh}" style="margin-bottom:14px">${esc(d.note||"")}</textarea>
     ${d.exercises.map((ex,i)=>exBlock(ex,i,"edit",false,d.exercises.length)).join("")}
-    <button class="btn block" data-act="add-ex">${L.addEx}</button>
+    <div class="row add-row"><button class="btn" data-act="add-ex">${L.addEx}</button><button class="btn" data-act="add-cardio">${L.addCardio}</button></div>
     <div class="row" style="margin-top:18px"><button class="btn primary" data-act="edit-save">${L.saveTpl}</button><button class="btn ghost" data-act="edit-cancel">${L.cancel}</button></div>
   </div>`;
 }
@@ -666,6 +696,8 @@ document.addEventListener("click",e=>{
     case "lang": if(el.dataset.lang!==lang){lang=el.dataset.lang;LS.set("podhod:lang",lang);refreshDatalist();render()} return;
     case "tab": tab=el.dataset.tab;LS.set("podhod:tab",tab);ui.confirm=null;render();window.scrollTo(0,0);return;
     case "start-empty": return startWorkout(L.workout,null,null);
+    case "start-cardio": return startWorkout(L.cardioW,[{name:L.cardioName,kind:"c",sets:[{w:"",r:""}]}],null);
+    case "add-cardio":{obj.exercises.push({name:"",kind:"c",sets:[{w:"",r:"",done:false}]});touched(el);render();const ins=document.querySelectorAll(".ex-name");ins[ins.length-1]&&ins[ins.length-1].focus();return}
     case "start-tpl":{const t=templates.find(t=>t.id===id);if(t)startWorkout(t.name,clone(t.exercises||[]),t.id);return}
     case "repeat":{const s=sessions.find(s=>s.id===id);if(s)startWorkout(s.name,clone(s.exercises||[]),s.templateId&&templates.some(t=>t.id===s.templateId)?s.templateId:null);return}
     case "add-ex":{obj.exercises.push({name:"",kind:"wr",sets:[{w:"",r:"",done:false}]});touched(el);render();const ins=document.querySelectorAll(".ex-name");ins[ins.length-1]&&ins[ins.length-1].focus();return}
@@ -722,13 +754,19 @@ document.addEventListener("input",e=>{
   else{
     const ex=obj.exercises[+el.closest("[data-ei]").dataset.ei];
     if(f==="name")ex.name=el.value;
-    else if(f==="kind"){ex.kind=el.value;touched(el);render();return}
+    else if(f==="kind"){ex.kind=el.value;
+      if(ex.kind==="c"){const s0=ex.sets[0]||{w:"",r:""};ex.sets=[{w:s0.w,r:s0.r,done:!!s0.done}]}
+      else if(!ex.sets.length)ex.sets.push({w:"",r:"",done:false});
+      touched(el);render();return}
     else{const s=ex.sets[+el.closest("[data-si]").dataset.si];const dEl=el.closest("[data-di]");(dEl?s.drops[+dEl.dataset.di]:s)[f]=el.value.replace(",",".")}
   }
   touched(el);
 });
 document.addEventListener("change",e=>{
   const el=e.target;if(el.dataset.f!=="name")return;
+  const obj=scopeObj(el),exEl=el.closest("[data-ei]"),ex=obj&&exEl&&obj.exercises[+exEl.dataset.ei];
+  if(ex&&ex.kind!=="c"&&T().cardio.some(n=>norm(n)===norm(el.value))&&ex.sets.every(s=>String(s.w).trim()===""&&String(s.r).trim()==="")){
+    ex.kind="c";ex.sets=[{w:"",r:"",done:false}];touched(el);render();return}
   const s=el.closest("[data-scope='active']");if(!s)return;
   const h=el.closest("[data-ei]").querySelector("[data-hint]");if(h)h.innerHTML=hintHtml(lastFor(el.value,active&&active.startedAt));
 });
