@@ -1,8 +1,8 @@
 {
   "name": "Подход",
   "short_name": "Подход",
-  "description": "Дневник тренировок: шаблоны, подходы, история",
-  "lang": "ru",
+  "description": "Workout log: templates, sets, history",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

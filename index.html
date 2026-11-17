@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Подход</title>
-<meta name="description" content="Дневник тренировок: шаблоны, подходы, история">
+<meta name="description" content="Workout log: templates, sets, history">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Подход">
@@ -176,21 +176,27 @@ nav.tabs .dot{width:6px;height:6px;border-radius:50%;background:var(--done)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .backup{margin-top:28px}
 .backup .meta{font-size:13px;color:var(--muted)}
+.top-r{display:flex;gap:10px;align-items:center}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.lang button{border:0;background:transparent;min-height:32px;min-width:38px;padding:0 8px;font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.04em;color:var(--muted)}
+.lang button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="top">
     <div class="brand">ПОД<b>ХОД</b></div>
-    <div class="muted" id="today"></div>
+    <div class="top-r"><span class="muted" id="today"></span>
+      <div class="lang" role="group" aria-label="Language / Язык"><button data-act="lang" data-lang="en">EN</button><button data-act="lang" data-lang="ru">RU</button></div>
+    </div>
   </header>
   <div id="banner"></div>
-  <main id="main"><p class="muted">Загружаю ваши тренировки…</p></main>
+  <main id="main"></main>
 </div>
-<nav class="tabs" aria-label="Разделы"><div class="in">
-  <button data-act="tab" data-tab="workout" id="tab-workout">Тренировка</button>
-  <button data-act="tab" data-tab="templates" id="tab-templates">Шаблоны</button>
-  <button data-act="tab" data-tab="history" id="tab-history">История</button>
+<nav class="tabs" id="tabs"><div class="in">
+  <button data-act="tab" data-tab="workout" id="tab-workout"></button>
+  <button data-act="tab" data-tab="templates" id="tab-templates"></button>
+  <button data-act="tab" data-tab="history" id="tab-history"></button>
 </div></nav>
 <div class="toast" id="toast" hidden></div>
 <div class="tip" id="tip" role="tooltip" hidden></div>
@@ -200,8 +206,98 @@ nav.tabs .dot{width:6px;height:6px;border-radius:50%;background:var(--done)}
 <script>
 (function(){
 "use strict";
-const CATALOG=["Приседания со штангой","Гоблет-приседания","Жим ногами","Болгарские сплит-приседания","Выпады с гантелями","Румынская тяга","Становая тяга","Ягодичный мост со штангой","Отведение ноги в кроссовере","Разгибания ног в тренажёре","Сгибания ног в тренажёре","Подъёмы на носки","Жим лёжа","Жим гантелей на наклонной скамье","Отжимания","Отжимания на брусьях","Жим стоя","Разведения гантелей в стороны","Подтягивания","Тяга верхнего блока","Тяга горизонтального блока","Тяга штанги в наклоне","Тяга гантели в наклоне","Гиперэкстензия","Сгибания рук со штангой","Молотки","Французский жим","Разгибания рук на блоке","Планка","Скручивания"];
-const KINDS={wr:"кг × повт",r:"повторы",t:"секунды"};
+
+/* ---------- language ---------- */
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let lang=LS.get("podhod:lang","en"); if(lang!=="ru") lang="en";
+const STR={
+en:{
+  loading:"Loading your workouts…", nav:"Sections", tWorkout:"Workout", tTemplates:"Templates", tHistory:"History", running:"in progress",
+  installB:"Install the app:", installT:"in Safari tap Share, then “Add to Home Screen”. Workouts logged in the browser won’t carry over to the installed app.", gotIt:"Got it",
+  saveErr:"Couldn’t save: browser storage is full",
+  backupH:"Backup", backupMeta:"Your workouts are stored only on this phone. Save a copy to Files or iCloud Drive so nothing is lost when you change phones.",
+  lastBackup:d=>` Last backup: ${d}.`, noBackup:" No backups yet.", backupSave:"Save a copy", backupRestore:"Restore from file", backupSaved:"Copy saved",
+  restored:(ns,nt)=>`Restored: ${ns} ${pl(ns,"ses")}, ${nt} ${pl(nt,"tpl")}`, notBackup:"This isn’t a Podhod backup file",
+  kinds:{wr:"kg × reps",r:"reps",t:"seconds"}, kg:"kg", reps:"reps", sec:"sec", secShort:"s", colNo:"#",
+  aW:si=>`Weight, kg, set ${si}`, aR:si=>`Reps, set ${si}`, aS:si=>`Seconds, set ${si}`, aDone:si=>`Set ${si} done`,
+  aDropAdd:si=>`Add a drop to set ${si}`, dropTitle:"Drop: lower the weight and keep going", aDropW:(di,si)=>`Drop ${di}, weight, set ${si}`, aDropR:(di,si)=>`Drop ${di}, reps, set ${si}`, aDropDel:di=>`Delete drop ${di}`, aSetDel:si=>`Delete set ${si}`,
+  exName:"Exercise name", kindAria:"What to log", addSet:"+ Set", moveUp:"Move up", moveDown:"Move down", remove:"Remove",
+  lastTime:d=>`Last time, ${d}: `,
+  finishH:"Finish workout", finishDone:(d,a)=>`Sets ticked: <b>${d}</b> of ${a}. Only ticked sets go to history.`, finishNone:"No sets are ticked. All filled-in sets go to history.",
+  updTpl:n=>`Update template “${n}” with today’s exercises and weights`, saveNewTpl:"Save as a new template", tplName:"Template name", saveHistory:"Save to history", back:"Back",
+  discardQ:"Delete this workout without saving?", del:"Delete", no:"No", cancelWorkout:"Cancel workout",
+  workout:"Workout", inProgress:"Time", rest:"Rest", addEx:"+ Exercise", finishBtn:"Finish workout",
+  start:"Start", noEx:"No exercises", noTplH:"No templates yet",
+  noTplT:"A template is a ready-made workout: exercises, sets and weights. You can run it again and change it. Create one in Templates or add two examples.",
+  createTpl:"Create template", addSamples:"Add examples", startH:"Start a workout", emptyWorkout:"Empty workout", lastW:"Last:", repeat:"Repeat", fromTpl:"From a template",
+  templatesH:"Templates", newBtn:"+ New", lastDone:d=>` · last done ${d}`, neverDone:" · not done yet", delTplQ:"Delete this template? History stays.",
+  edit:"Edit", copy:"Copy", tplEmptyH:"Your ready-made workouts will live here", tplEmptyT:"For example, “Legs & glutes” or “Upper body”. After a workout you can update the template with today’s weights.",
+  newTpl:"New template", editTpl:"Edit template", notePh:"Note: warm-up, tempo, rest between sets", saveTpl:"Save template", cancel:"Cancel",
+  historyH:"History", histEmptyH:"Nothing here yet", histEmptyT:"Finished workouts will show up here: date, duration and every set.",
+  last7:"last 7 days", thisMonth:"this month", total:"total", min:"min", delSesQ:"Delete from history?", makeTpl:"Make a template",
+  prevMonth:"Previous month", nextMonth:"Next month", finishFirst:"Finish the current workout first", fillOne:"Fill in at least one set",
+  saved:"Workout saved", exercise:"Exercise", cancelled:"Workout cancelled", copySuffix:" (copy)", copyMade:"Copy created", tplDeleted:"Template deleted",
+  nameTpl:"Give the template a name", tplSaved:"Template saved", delFromHist:"Deleted from history", samplesAdded:"Two examples added", drop:"drop",
+  forms:{ses:["workout","workouts"],tpl:["template","templates"],ex:["exercise","exercises"],set:["set","sets"]},
+  catalog:["Back Squat","Goblet Squat","Leg Press","Bulgarian Split Squat","Dumbbell Lunge","Romanian Deadlift","Deadlift","Barbell Hip Thrust","Cable Kickback","Leg Extension","Leg Curl","Calf Raise","Bench Press","Incline Dumbbell Press","Push-up","Dip","Overhead Press","Lateral Raise","Pull-up","Lat Pulldown","Seated Cable Row","Barbell Row","One-arm Dumbbell Row","Back Extension","Barbell Curl","Hammer Curl","Skull Crusher","Triceps Pushdown","Plank","Crunch"],
+  samples:[
+    {name:"Example: legs & glutes",note:"Example template. Edit or delete it. Rest 2 min.",exercises:[
+      {name:"Back Squat",kind:"wr",sets:[{w:30,r:10},{w:40,r:8},{w:40,r:8},{w:40,r:8}]},
+      {name:"Romanian Deadlift",kind:"wr",sets:[{w:30,r:10},{w:30,r:10},{w:30,r:10}]},
+      {name:"Barbell Hip Thrust",kind:"wr",sets:[{w:40,r:12},{w:40,r:12},{w:40,r:12}]},
+      {name:"Bulgarian Split Squat",kind:"wr",sets:[{w:6,r:10},{w:6,r:10},{w:6,r:10}]},
+      {name:"Plank",kind:"t",sets:[{w:"",r:45},{w:"",r:45}]}]},
+    {name:"Example: upper body",note:"Example template. Edit or delete it.",exercises:[
+      {name:"Incline Dumbbell Press",kind:"wr",sets:[{w:8,r:10},{w:8,r:10},{w:8,r:10}]},
+      {name:"Lat Pulldown",kind:"wr",sets:[{w:30,r:12},{w:30,r:12},{w:30,r:12}]},
+      {name:"Lateral Raise",kind:"wr",sets:[{w:4,r:15},{w:4,r:15},{w:4,r:15}]},
+      {name:"Push-up",kind:"r",sets:[{w:"",r:10},{w:"",r:10}]}]}]
+},
+ru:{
+  loading:"Загружаю ваши тренировки…", nav:"Разделы", tWorkout:"Тренировка", tTemplates:"Шаблоны", tHistory:"История", running:"идёт",
+  installB:"Установите приложение:", installT:"в Safari нажмите «Поделиться», затем «На экран „Домой“». Тренировки, записанные в браузере, в установленное приложение не перенесутся.", gotIt:"Понятно",
+  saveErr:"Не удалось сохранить: память браузера заполнена",
+  backupH:"Резервная копия", backupMeta:"Тренировки хранятся только на этом телефоне. Сохраняйте копию в «Файлы» или iCloud Drive, чтобы ничего не потерять при смене телефона.",
+  lastBackup:d=>` Последняя копия: ${d}.`, noBackup:" Копий ещё не было.", backupSave:"Сохранить копию", backupRestore:"Восстановить из файла", backupSaved:"Копия сохранена",
+  restored:(ns,nt)=>`Восстановлено: ${ns} ${pl(ns,"ses")}, ${nt} ${pl(nt,"tpl")}`, notBackup:"Это не файл копии «Подхода»",
+  kinds:{wr:"кг × повт",r:"повторы",t:"секунды"}, kg:"кг", reps:"повт", sec:"сек", secShort:"с", colNo:"№",
+  aW:si=>`Вес, кг, подход ${si}`, aR:si=>`Повторы, подход ${si}`, aS:si=>`Секунды, подход ${si}`, aDone:si=>`Подход ${si} выполнен`,
+  aDropAdd:si=>`Добавить дроп к подходу ${si}`, dropTitle:"Дроп: снизить вес и продолжить подход", aDropW:(di,si)=>`Дроп ${di}, вес, подход ${si}`, aDropR:(di,si)=>`Дроп ${di}, повторы, подход ${si}`, aDropDel:di=>`Удалить дроп ${di}`, aSetDel:si=>`Удалить подход ${si}`,
+  exName:"Название упражнения", kindAria:"Что записывать", addSet:"+ Подход", moveUp:"Поднять выше", moveDown:"Опустить ниже", remove:"Убрать",
+  lastTime:d=>`Прошлый раз, ${d}: `,
+  finishH:"Завершить тренировку", finishDone:(d,a)=>`Отмечено подходов: <b>${d}</b> из ${a}. В историю попадут только отмеченные.`, finishNone:"Ни один подход не отмечен. В историю попадут все заполненные подходы.",
+  updTpl:n=>`Обновить шаблон «${n}»: записать в него сегодняшние упражнения и веса`, saveNewTpl:"Сохранить как новый шаблон", tplName:"Название шаблона", saveHistory:"Сохранить в историю", back:"Вернуться",
+  discardQ:"Удалить запись без сохранения?", del:"Удалить", no:"Нет", cancelWorkout:"Отменить тренировку",
+  workout:"Тренировка", inProgress:"Идёт", rest:"Отдых", addEx:"+ Упражнение", finishBtn:"Завершить тренировку",
+  start:"Начать", noEx:"Без упражнений", noTplH:"Шаблонов пока нет",
+  noTplT:"Шаблон — это готовая тренировка: упражнения, подходы и веса. Его можно запускать снова и менять. Создайте свой во вкладке «Шаблоны» или добавьте два примера.",
+  createTpl:"Создать шаблон", addSamples:"Добавить примеры", startH:"Начать тренировку", emptyWorkout:"Пустая тренировка", lastW:"Последняя:", repeat:"Повторить", fromTpl:"Из шаблона",
+  templatesH:"Шаблоны", newBtn:"+ Новый", lastDone:d=>` · последний раз ${d}`, neverDone:" · ещё не выполнялся", delTplQ:"Удалить шаблон? История останется.",
+  edit:"Изменить", copy:"Копия", tplEmptyH:"Здесь будут ваши тренировки-заготовки", tplEmptyT:"Например, «Ноги и ягодицы» или «Верх тела». После тренировки шаблон можно обновить сегодняшними весами.",
+  newTpl:"Новый шаблон", editTpl:"Изменение шаблона", notePh:"Заметка: разминка, темп, отдых между подходами", saveTpl:"Сохранить шаблон", cancel:"Отмена",
+  historyH:"История", histEmptyH:"Пока пусто", histEmptyT:"Завершённые тренировки появятся здесь: дата, длительность и все подходы.",
+  last7:"за 7 дней", thisMonth:"в этом месяце", total:"всего", min:"мин", delSesQ:"Удалить из истории?", makeTpl:"Сделать шаблоном",
+  prevMonth:"Предыдущий месяц", nextMonth:"Следующий месяц", finishFirst:"Сначала завершите текущую тренировку", fillOne:"Заполните хотя бы один подход",
+  saved:"Тренировка сохранена", exercise:"Упражнение", cancelled:"Тренировка отменена", copySuffix:" (копия)", copyMade:"Копия создана", tplDeleted:"Шаблон удалён",
+  nameTpl:"Дайте шаблону название", tplSaved:"Шаблон сохранён", delFromHist:"Удалено из истории", samplesAdded:"Добавлены два примера", drop:"дроп",
+  forms:{ses:["тренировка","тренировки","тренировок"],tpl:["шаблон","шаблона","шаблонов"],ex:["упражнение","упражнения","упражнений"],set:["подход","подхода","подходов"]},
+  catalog:["Приседания со штангой","Гоблет-приседания","Жим ногами","Болгарские сплит-приседания","Выпады с гантелями","Румынская тяга","Становая тяга","Ягодичный мост со штангой","Отведение ноги в кроссовере","Разгибания ног в тренажёре","Сгибания ног в тренажёре","Подъёмы на носки","Жим лёжа","Жим гантелей на наклонной скамье","Отжимания","Отжимания на брусьях","Жим стоя","Разведения гантелей в стороны","Подтягивания","Тяга верхнего блока","Тяга горизонтального блока","Тяга штанги в наклоне","Тяга гантели в наклоне","Гиперэкстензия","Сгибания рук со штангой","Молотки","Французский жим","Разгибания рук на блоке","Планка","Скручивания"],
+  samples:[
+    {name:"Пример: ноги и ягодицы",note:"Пример шаблона, можно изменить или удалить. Отдых 2 мин.",exercises:[
+      {name:"Приседания со штангой",kind:"wr",sets:[{w:30,r:10},{w:40,r:8},{w:40,r:8},{w:40,r:8}]},
+      {name:"Румынская тяга",kind:"wr",sets:[{w:30,r:10},{w:30,r:10},{w:30,r:10}]},
+      {name:"Ягодичный мост со штангой",kind:"wr",sets:[{w:40,r:12},{w:40,r:12},{w:40,r:12}]},
+      {name:"Болгарские сплит-приседания",kind:"wr",sets:[{w:6,r:10},{w:6,r:10},{w:6,r:10}]},
+      {name:"Планка",kind:"t",sets:[{w:"",r:45},{w:"",r:45}]}]},
+    {name:"Пример: верх тела",note:"Пример шаблона, можно изменить или удалить.",exercises:[
+      {name:"Жим гантелей на наклонной скамье",kind:"wr",sets:[{w:8,r:10},{w:8,r:10},{w:8,r:10}]},
+      {name:"Тяга верхнего блока",kind:"wr",sets:[{w:30,r:12},{w:30,r:12},{w:30,r:12}]},
+      {name:"Разведения гантелей в стороны",kind:"wr",sets:[{w:4,r:15},{w:4,r:15},{w:4,r:15}]},
+      {name:"Отжимания",kind:"r",sets:[{w:"",r:10},{w:"",r:10}]}]}]
+}};
+const T=()=>STR[lang];
+const loc=()=>lang==="ru"?"ru-RU":"en-US";
+function pl(n,key){const f=T().forms[key];if(lang!=="ru")return n===1?f[0]:f[1];const m10=n%10,m100=n%100;return m10===1&&m100!==11?f[0]:(m10>=2&&m10<=4&&(m100<10||m100>=20)?f[1]:f[2])}
 
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
@@ -209,13 +305,12 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
 const uid=()=> (crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,10));
 const clone=o=>JSON.parse(JSON.stringify(o));
 const num=v=>{const n=parseFloat(String(v==null?"":v).replace(",","."));return isFinite(n)?n:0};
-const fmt=v=>{const n=num(v);return Number.isInteger(n)?String(n):String(Math.round(n*100)/100).replace(".",",")};
+const fmt=v=>{const n=num(v);const s=Number.isInteger(n)?String(n):String(Math.round(n*100)/100);return lang==="ru"?s.replace(".",","):s};
 const norm=s=>String(s||"").trim().toLowerCase().replace(/ё/g,"е");
-const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const dLong=ts=>new Date(ts).toLocaleDateString("ru-RU",{weekday:"short",day:"numeric",month:"long"});
-const dShort=ts=>new Date(ts).toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
+const dLong=ts=>new Date(ts).toLocaleDateString(loc(),{weekday:"short",day:"numeric",month:"long"});
+const dShort=ts=>new Date(ts).toLocaleDateString(loc(),{day:"numeric",month:"short"});
+const monthTitle=d=>d.toLocaleDateString(loc(),{month:"long",year:"numeric"}).replace(" г.","");
 const clock=ms=>{ms=Math.max(0,ms);const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;return (h?h+":"+String(m).padStart(2,"0"):m)+":"+String(ss).padStart(2,"0")};
-const plural=(n,a,b,c)=>{const m10=n%10,m100=n%100;return m10===1&&m100!==11?a:(m10>=2&&m10<=4&&(m100<10||m100>=20)?b:c)};
 let toastT;function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2600)}
 
 /* ---------- storage: on this phone only (localStorage) ---------- */
@@ -239,7 +334,7 @@ const store={mode:"local",subs:{},
   async getActive(){return LS.get("podhod:active",null)},
   async setActive(w){LSW("podhod:active",w)}
 };
-const saveErr=()=>toast("Не удалось сохранить: память браузера заполнена");
+const saveErr=()=>toast(T().saveErr);
 
 /* ---------- backup to a file ---------- */
 async function exportData(){
@@ -249,7 +344,7 @@ async function exportData(){
   const done=()=>{LS.set("podhod:lastBackup",Date.now());render()};
   try{
     const file=new File([blob],name,{type:"application/json"});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});done();toast("Копия сохранена");return}
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});done();toast(T().backupSaved);return}
   }catch(e){if(e&&e.name==="AbortError")return}
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);done();
@@ -260,14 +355,14 @@ async function importData(file){
     if(!d||d.app!=="podhod")throw new Error("format");
     const nt=await store.merge("templates",Array.isArray(d.templates)?d.templates:[]);
     const ns=await store.merge("sessions",Array.isArray(d.sessions)?d.sessions:[]);
-    toast(`Восстановлено: ${ns} ${plural(ns,"тренировка","тренировки","тренировок")}, ${nt} ${plural(nt,"шаблон","шаблона","шаблонов")}`);
-  }catch(e){toast("Это не файл копии «Подхода»")}
+    toast(T().restored(ns,nt));
+  }catch(e){toast(T().notBackup)}
 }
 function viewBackup(){
   const lb=LS.get("podhod:lastBackup",0);
-  return `<div class="section backup"><h2>Резервная копия</h2>
-    <div class="meta">Тренировки хранятся только на этом телефоне. Сохраняйте копию в «Файлы» или iCloud Drive, чтобы ничего не потерять при смене телефона.${lb?` Последняя копия: ${esc(dShort(lb))}.`:" Копий ещё не было."}</div>
-    <div class="row"><button class="btn" data-act="backup-export">Сохранить копию</button><button class="btn ghost" data-act="backup-import">Восстановить из файла</button></div></div>`;
+  return `<div class="section backup"><h2>${T().backupH}</h2>
+    <div class="meta">${T().backupMeta}${lb?esc(T().lastBackup(dShort(lb))):T().noBackup}</div>
+    <div class="row"><button class="btn" data-act="backup-export">${T().backupSave}</button><button class="btn ghost" data-act="backup-import">${T().backupRestore}</button></div></div>`;
 }
 
 /* ---------- state ---------- */
@@ -289,186 +384,191 @@ function lastFor(name,beforeTs){
   return null;
 }
 function setText(ex,s){
-  if(ex.kind==="t") return fmt(s.r)+" с";
+  if(ex.kind==="t") return fmt(s.r)+" "+T().secShort;
   if(ex.kind==="r") return fmt(s.r);
-  return [s,...(s.drops||[])].map(x=>(num(x.w)?fmt(x.w)+"кг × ":"")+fmt(x.r)).join(" → ");
+  return [s,...(s.drops||[])].map(x=>(num(x.w)?fmt(x.w)+T().kg+" × ":"")+fmt(x.r)).join(" → ");
 }
 function summarize(ex){
   const sets=ex.sets||[];const n=sets.length;if(!n) return "";
   const reps=[...new Set(sets.map(s=>fmt(s.r)))];
-  let out=reps.length===1&&num(reps[0])?n+"×"+reps[0]+(ex.kind==="t"?" с":""):n+" "+plural(n,"подход","подхода","подходов");
+  let out=reps.length===1&&num(reps[0])?n+"×"+reps[0]+(ex.kind==="t"?" "+T().secShort:""):n+" "+pl(n,"set");
   const mw=Math.max(...sets.map(s=>num(s.w)));
-  if(ex.kind==="wr"&&mw>0) out+=" · "+fmt(mw)+" кг";
-  if(ex.kind==="wr"&&sets.some(s=>s.drops&&s.drops.length)) out+=" · дроп";
+  if(ex.kind==="wr"&&mw>0) out+=" · "+fmt(mw)+" "+T().kg;
+  if(ex.kind==="wr"&&sets.some(s=>s.drops&&s.drops.length)) out+=" · "+T().drop;
   return out;
 }
-const tonnage=exs=>exs.reduce((a,ex)=>a+(ex.kind==="wr"?(ex.sets||[]).reduce((b,s)=>b+num(s.w)*num(s.r),0):0),0);
 function refreshDatalist(){
-  const names=new Set(CATALOG);
+  const names=new Set(T().catalog);
   templates.forEach(t=>(t.exercises||[]).forEach(e=>e.name&&names.add(e.name.trim())));
   sessions.forEach(t=>(t.exercises||[]).forEach(e=>e.name&&names.add(e.name.trim())));
-  $("#exlist").innerHTML=[...names].sort((a,b)=>a.localeCompare(b,"ru")).map(n=>`<option value="${esc(n)}">`).join("");
+  $("#exlist").innerHTML=[...names].sort((a,b)=>a.localeCompare(b,lang)).map(n=>`<option value="${esc(n)}">`).join("");
 }
 
 /* ---------- views ---------- */
 const CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const DROP='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h5v5h5v5h6"/><path d="M17 12l3 3-3 3"/></svg>';
 function exBlock(ex,ei,scope,live,total){
-  const k=ex.kind||"wr";
+  const L=T(),k=ex.kind||"wr";
   const last=live?lastFor(ex.name,active&&active.startedAt):null;
   const hint=live?`<p class="hint" data-hint>${hintHtml(last)}</p>`:"";
-  const head=`<div class="set head k-${k}"><span class="n">№</span>${k==="wr"?"<span>кг</span>":""}<span>${k==="t"?"сек":"повт"}</span>${k==="wr"?"<span></span>":""}${live?"<span></span>":""}<span></span></div>`;
+  const head=`<div class="set head k-${k}"><span class="n">${L.colNo}</span>${k==="wr"?`<span>${L.kg}</span>`:""}<span>${k==="t"?L.sec:L.reps}</span>${k==="wr"?"<span></span>":""}${live?"<span></span>":""}<span></span></div>`;
   const rows=(ex.sets||[]).map((s,si)=>{
-    const w=k==="wr"?`<input data-f="w" inputmode="decimal" enterkeyhint="next" value="${esc(s.w)}" placeholder="кг" aria-label="Вес, кг, подход ${si+1}">`:"";
-    const r=`<input data-f="r" inputmode="numeric" enterkeyhint="next" value="${esc(s.r)}" placeholder="${k==="t"?"сек":"повт"}" aria-label="${k==="t"?"Секунды":"Повторы"}, подход ${si+1}">`;
-    const chk=live?`<button class="chk" data-act="toggle-set" aria-pressed="${!!s.done}" aria-label="Подход ${si+1} выполнен">${CHECK}</button>`:"";
+    const n=si+1;
+    const w=k==="wr"?`<input data-f="w" inputmode="decimal" enterkeyhint="next" value="${esc(s.w)}" placeholder="${L.kg}" aria-label="${esc(L.aW(n))}">`:"";
+    const r=`<input data-f="r" inputmode="numeric" enterkeyhint="next" value="${esc(s.r)}" placeholder="${k==="t"?L.sec:L.reps}" aria-label="${esc(k==="t"?L.aS(n):L.aR(n))}">`;
+    const chk=live?`<button class="chk" data-act="toggle-set" aria-pressed="${!!s.done}" aria-label="${esc(L.aDone(n))}">${CHECK}</button>`:"";
     const dl=(k==="wr"&&s.drops)||[];
-    const dropBtn=k==="wr"?`<button class="drop-btn${dl.length?" has":""}" data-act="add-drop" aria-label="Добавить дроп к подходу ${si+1}" title="Дроп: снизить вес и продолжить подход">${DROP}</button>`:"";
+    const dropBtn=k==="wr"?`<button class="drop-btn${dl.length?" has":""}" data-act="add-drop" aria-label="${esc(L.aDropAdd(n))}" title="${esc(L.dropTitle)}">${DROP}</button>`:"";
     const drops=dl.map((d,di)=>`<div class="set drop k-wr${s.done?" is-done":""}" data-di="${di}"><span class="n" aria-hidden="true">↘</span>
-      <input data-f="w" inputmode="decimal" enterkeyhint="next" value="${esc(d.w)}" placeholder="кг" aria-label="Дроп ${di+1}, вес, подход ${si+1}">
-      <input data-f="r" inputmode="numeric" enterkeyhint="next" value="${esc(d.r)}" placeholder="повт" aria-label="Дроп ${di+1}, повторы, подход ${si+1}">
-      <span></span>${live?"<span></span>":""}<button class="x" data-act="del-drop" aria-label="Удалить дроп ${di+1}">×</button></div>`).join("");
-    return `<div class="setgrp" data-si="${si}"><div class="set main k-${k}${s.done?" is-done":""}"><span class="n">${si+1}</span>${w}${r}${dropBtn}${chk}<button class="x" data-act="del-set" aria-label="Удалить подход ${si+1}">×</button></div>${drops}</div>`;
+      <input data-f="w" inputmode="decimal" enterkeyhint="next" value="${esc(d.w)}" placeholder="${L.kg}" aria-label="${esc(L.aDropW(di+1,n))}">
+      <input data-f="r" inputmode="numeric" enterkeyhint="next" value="${esc(d.r)}" placeholder="${L.reps}" aria-label="${esc(L.aDropR(di+1,n))}">
+      <span></span>${live?"<span></span>":""}<button class="x" data-act="del-drop" aria-label="${esc(L.aDropDel(di+1))}">×</button></div>`).join("");
+    return `<div class="setgrp" data-si="${si}"><div class="set main k-${k}${s.done?" is-done":""}"><span class="n">${n}</span>${w}${r}${dropBtn}${chk}<button class="x" data-act="del-set" aria-label="${esc(L.aSetDel(n))}">×</button></div>${drops}</div>`;
   }).join("");
   return `<section class="ex${live?"":" plan"}" data-ei="${ei}">
     <div class="ex-head"><span class="ex-num">${ei+1}</span>
-      <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="Название упражнения" aria-label="Название упражнения">
-      <select class="kind" data-f="kind" aria-label="Что записывать">${Object.entries(KINDS).map(([v,l])=>`<option value="${v}"${v===k?" selected":""}>${l}</option>`).join("")}</select>
+      <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="${L.exName}" aria-label="${L.exName}">
+      <select class="kind" data-f="kind" aria-label="${L.kindAria}">${Object.entries(L.kinds).map(([v,l])=>`<option value="${v}"${v===k?" selected":""}>${l}</option>`).join("")}</select>
     </div>${hint}
     <div class="sets">${head}${rows}</div>
-    <div class="ex-actions"><button class="btn small" data-act="add-set">+ Подход</button>
-      <span class="row"><button class="btn ghost small" data-act="move-ex" data-d="-1" ${ei===0?"disabled":""} aria-label="Поднять выше">↑</button><button class="btn ghost small" data-act="move-ex" data-d="1" ${ei===total-1?"disabled":""} aria-label="Опустить ниже">↓</button><button class="btn ghost small" data-act="del-ex">Убрать</button></span>
+    <div class="ex-actions"><button class="btn small" data-act="add-set">${L.addSet}</button>
+      <span class="row"><button class="btn ghost small" data-act="move-ex" data-d="-1" ${ei===0?"disabled":""} aria-label="${L.moveUp}">↑</button><button class="btn ghost small" data-act="move-ex" data-d="1" ${ei===total-1?"disabled":""} aria-label="${L.moveDown}">↓</button><button class="btn ghost small" data-act="del-ex">${L.remove}</button></span>
     </div></section>`;
 }
 function hintHtml(last){
   if(!last) return "";
-  return `Прошлый раз, ${esc(dShort(last.date))}: <b class="num">${esc(last.ex.sets.map(s=>setText(last.ex,s)).join(" · "))}</b>`;
+  return `${esc(T().lastTime(dShort(last.date)))}<b class="num">${esc(last.ex.sets.map(s=>setText(last.ex,s)).join(" · "))}</b>`;
 }
 
 function viewWorkout(){
   if(!active) return viewStart();
+  const L=T();
   const doneSets=active.exercises.reduce((a,e)=>a+e.sets.filter(s=>s.done).length,0);
   const allSets=active.exercises.reduce((a,e)=>a+e.sets.length,0);
   let finish="";
   if(ui.finishing){
     const tpl=active.templateId&&templates.find(t=>t.id===active.templateId);
     finish=`<div class="finish">
-      <h2>Завершить тренировку</h2>
-      <p class="muted" style="margin:0">${doneSets?`Отмечено подходов: <b>${doneSets}</b> из ${allSets}. В историю попадут только отмеченные.`:`Ни один подход не отмечен. В историю попадут все заполненные подходы.`}</p>
-      ${tpl?`<label class="check"><input type="checkbox" id="opt-keep" ${ui.keepTpl?"checked":""}><span>Обновить шаблон «${esc(tpl.name)}»: записать в него сегодняшние упражнения и веса</span></label>`:""}
-      <label class="check"><input type="checkbox" id="opt-new" ${ui.newTpl?"checked":""}><span>Сохранить как новый шаблон</span></label>
-      <input class="field" id="opt-name" placeholder="Название шаблона" value="${esc(ui.newTplName||active.name)}" ${ui.newTpl?"":"hidden"}>
-      <div class="row"><button class="btn primary" data-act="finish-save">Сохранить в историю</button><button class="btn ghost" data-act="finish-cancel">Вернуться</button></div>
+      <h2>${L.finishH}</h2>
+      <p class="muted" style="margin:0">${doneSets?L.finishDone(doneSets,allSets):L.finishNone}</p>
+      ${tpl?`<label class="check"><input type="checkbox" id="opt-keep" ${ui.keepTpl?"checked":""}><span>${esc(L.updTpl(tpl.name))}</span></label>`:""}
+      <label class="check"><input type="checkbox" id="opt-new" ${ui.newTpl?"checked":""}><span>${L.saveNewTpl}</span></label>
+      <input class="field" id="opt-name" placeholder="${L.tplName}" value="${esc(ui.newTplName||active.name)}" ${ui.newTpl?"":"hidden"}>
+      <div class="row"><button class="btn primary" data-act="finish-save">${L.saveHistory}</button><button class="btn ghost" data-act="finish-cancel">${L.back}</button></div>
     </div>`;
   }
   const discard=ui.confirm==="discard"
-    ?`<span class="row"><span class="muted">Удалить запись без сохранения?</span><button class="btn danger small" data-act="discard-yes">Удалить</button><button class="btn ghost small" data-act="confirm-no">Нет</button></span>`
-    :`<button class="btn ghost small" data-act="discard-ask">Отменить тренировку</button>`;
+    ?`<span class="row"><span class="muted">${L.discardQ}</span><button class="btn danger small" data-act="discard-yes">${L.del}</button><button class="btn ghost small" data-act="confirm-no">${L.no}</button></span>`
+    :`<button class="btn ghost small" data-act="discard-ask">${L.cancelWorkout}</button>`;
   return `<div data-scope="active">
     <div class="wbar">
-      <input class="title-input" data-f="title" value="${esc(active.name)}" placeholder="Тренировка" aria-label="Название тренировки">
+      <input class="title-input" data-f="title" value="${esc(active.name)}" placeholder="${L.workout}" aria-label="${L.workout}">
       <div class="clocks">
-        <span class="clock"><span class="eyebrow">Идёт</span><span class="num" data-clock="total">${clock(Date.now()-active.startedAt)}</span></span>
-        <span class="clock rest" ${active.restFrom?"":"hidden"}><span class="eyebrow">Отдых</span><span class="num" data-clock="rest">${active.restFrom?clock(Date.now()-active.restFrom):""}</span></span>      </div>
+        <span class="clock"><span class="eyebrow">${L.inProgress}</span><span class="num" data-clock="total">${clock(Date.now()-active.startedAt)}</span></span>
+        <span class="clock rest" ${active.restFrom?"":"hidden"}><span class="eyebrow">${L.rest}</span><span class="num" data-clock="rest">${active.restFrom?clock(Date.now()-active.restFrom):""}</span></span>
+      </div>
     </div>
     ${active.exercises.map((ex,i)=>exBlock(ex,i,"active",true,active.exercises.length)).join("")}
-    <button class="btn block" data-act="add-ex">+ Упражнение</button>
+    <button class="btn block" data-act="add-ex">${L.addEx}</button>
     <div class="section">
-      ${finish||`<button class="btn primary block" data-act="finish-open">Завершить тренировку</button>`}
+      ${finish||`<button class="btn primary block" data-act="finish-open">${L.finishBtn}</button>`}
       <div class="row" style="justify-content:center">${discard}</div>
     </div></div>`;
 }
 
 function viewStart(){
+  const L=T();
   const sortedT=[...templates].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
   const last=sessions[0];
   const tplCards=sortedT.length?sortedT.map(t=>`<div class="card">
-      <div class="row" style="justify-content:space-between"><h3>${esc(t.name)}</h3><button class="btn primary small" data-act="start-tpl" data-id="${esc(t.id)}">Начать</button></div>
-      <div class="meta">${(t.exercises||[]).map(e=>esc(e.name)).join(" · ")||"Без упражнений"}</div></div>`).join("")
-    :`<div class="empty"><strong>Шаблонов пока нет</strong><span>Шаблон — это готовая тренировка: упражнения, подходы и веса. Его можно запускать снова и менять. Создайте свой во вкладке «Шаблоны» или добавьте два примера.</span><div class="row"><button class="btn small" data-act="tpl-new">Создать шаблон</button><button class="btn ghost small" data-act="seed">Добавить примеры</button></div></div>`;
+      <div class="row" style="justify-content:space-between"><h3>${esc(t.name)}</h3><button class="btn primary small" data-act="start-tpl" data-id="${esc(t.id)}">${L.start}</button></div>
+      <div class="meta">${(t.exercises||[]).map(e=>esc(e.name)).join(" · ")||L.noEx}</div></div>`).join("")
+    :`<div class="empty"><strong>${L.noTplH}</strong><span>${L.noTplT}</span><div class="row"><button class="btn small" data-act="tpl-new">${L.createTpl}</button><button class="btn ghost small" data-act="seed">${L.addSamples}</button></div></div>`;
   return `<div class="start">
-      <div><div class="eyebrow">${esc(dLong(Date.now()))}</div><h1>Начать тренировку</h1></div>
-      <button class="btn primary block" data-act="start-empty">Пустая тренировка</button>
-      ${last?`<div class="row" style="justify-content:space-between"><span class="muted">Последняя: <b style="color:var(--ink)">${esc(last.name||"Тренировка")}</b>, ${esc(dShort(last.finishedAt))}</span><button class="btn small" data-act="repeat" data-id="${esc(last.id)}">Повторить</button></div>`:""}
+      <div><div class="eyebrow">${esc(dLong(Date.now()))}</div><h1>${L.startH}</h1></div>
+      <button class="btn primary block" data-act="start-empty">${L.emptyWorkout}</button>
+      ${last?`<div class="row" style="justify-content:space-between"><span class="muted">${L.lastW} <b style="color:var(--ink)">${esc(last.name||L.workout)}</b>, ${esc(dShort(last.finishedAt))}</span><button class="btn small" data-act="repeat" data-id="${esc(last.id)}">${L.repeat}</button></div>`:""}
     </div>
-    <div class="section"><h2>Из шаблона</h2>${tplCards}</div>`;
+    <div class="section"><h2>${L.fromTpl}</h2>${tplCards}</div>`;
 }
 
 function viewTemplates(){
   if(editing) return viewEditor();
+  const L=T();
   const list=[...templates].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
   const lastDone=id=>{const s=sessions.find(s=>s.templateId===id);return s?dShort(s.finishedAt):null};
   const cards=list.map(t=>{
-    const ld=lastDone(t.id);
+    const ld=lastDone(t.id),n=(t.exercises||[]).length;
     const conf=ui.confirm==="tpl:"+t.id;
     return `<div class="card">
-      <div><h3>${esc(t.name)}</h3><div class="meta">${(t.exercises||[]).length} ${plural((t.exercises||[]).length,"упражнение","упражнения","упражнений")}${ld?" · последний раз "+esc(ld):" · ещё не выполнялся"}</div></div>
-      ${(t.exercises||[]).length?`<ul class="list">${t.exercises.map(e=>`<li><span>${esc(e.name)}</span><span>${esc(summarize(e))}</span></li>`).join("")}</ul>`:""}
+      <div><h3>${esc(t.name)}</h3><div class="meta">${n} ${pl(n,"ex")}${ld?esc(L.lastDone(ld)):L.neverDone}</div></div>
+      ${n?`<ul class="list">${t.exercises.map(e=>`<li><span>${esc(e.name)}</span><span>${esc(summarize(e))}</span></li>`).join("")}</ul>`:""}
       ${t.note?`<div class="meta">${esc(t.note)}</div>`:""}
       <div class="row">${conf
-        ?`<span class="muted">Удалить шаблон? История останется.</span><button class="btn danger small" data-act="tpl-del-yes" data-id="${esc(t.id)}">Удалить</button><button class="btn ghost small" data-act="confirm-no">Нет</button>`
-        :`<button class="btn primary small" data-act="start-tpl" data-id="${esc(t.id)}">Начать</button><button class="btn small" data-act="tpl-edit" data-id="${esc(t.id)}">Изменить</button><button class="btn ghost small" data-act="tpl-copy" data-id="${esc(t.id)}">Копия</button><button class="btn ghost small" data-act="tpl-del-ask" data-id="${esc(t.id)}">Удалить</button>`}</div>
+        ?`<span class="muted">${L.delTplQ}</span><button class="btn danger small" data-act="tpl-del-yes" data-id="${esc(t.id)}">${L.del}</button><button class="btn ghost small" data-act="confirm-no">${L.no}</button>`
+        :`<button class="btn primary small" data-act="start-tpl" data-id="${esc(t.id)}">${L.start}</button><button class="btn small" data-act="tpl-edit" data-id="${esc(t.id)}">${L.edit}</button><button class="btn ghost small" data-act="tpl-copy" data-id="${esc(t.id)}">${L.copy}</button><button class="btn ghost small" data-act="tpl-del-ask" data-id="${esc(t.id)}">${L.del}</button>`}</div>
     </div>`}).join("");
-  return `<div class="row" style="justify-content:space-between;margin-bottom:12px"><h1>Шаблоны</h1><button class="btn primary" data-act="tpl-new">+ Новый</button></div>
-    <div class="stack">${cards||`<div class="empty"><strong>Здесь будут ваши тренировки-заготовки</strong><span>Например, «Ноги и ягодицы» или «Верх тела». После тренировки шаблон можно обновить сегодняшними весами.</span><div class="row"><button class="btn small" data-act="tpl-new">Создать шаблон</button><button class="btn ghost small" data-act="seed">Добавить примеры</button></div></div>`}</div>`;
+  return `<div class="row" style="justify-content:space-between;margin-bottom:12px"><h1>${L.templatesH}</h1><button class="btn primary" data-act="tpl-new">${L.newBtn}</button></div>
+    <div class="stack">${cards||`<div class="empty"><strong>${L.tplEmptyH}</strong><span>${L.tplEmptyT}</span><div class="row"><button class="btn small" data-act="tpl-new">${L.createTpl}</button><button class="btn ghost small" data-act="seed">${L.addSamples}</button></div></div>`}</div>`;
 }
 
 function viewEditor(){
-  const d=editing.data;
+  const L=T(),d=editing.data;
   return `<div data-scope="edit">
-    <div class="eyebrow" style="margin-bottom:6px">${editing.isNew?"Новый шаблон":"Изменение шаблона"}</div>
-    <input class="title-input" data-f="title" value="${esc(d.name)}" placeholder="Название шаблона" aria-label="Название шаблона" style="margin-bottom:10px">
-    <textarea class="field" data-f="note" placeholder="Заметка: разминка, темп, отдых между подходами" style="margin-bottom:14px">${esc(d.note||"")}</textarea>
+    <div class="eyebrow" style="margin-bottom:6px">${editing.isNew?L.newTpl:L.editTpl}</div>
+    <input class="title-input" data-f="title" value="${esc(d.name)}" placeholder="${L.tplName}" aria-label="${L.tplName}" style="margin-bottom:10px">
+    <textarea class="field" data-f="note" placeholder="${L.notePh}" style="margin-bottom:14px">${esc(d.note||"")}</textarea>
     ${d.exercises.map((ex,i)=>exBlock(ex,i,"edit",false,d.exercises.length)).join("")}
-    <button class="btn block" data-act="add-ex">+ Упражнение</button>
-    <div class="row" style="margin-top:18px"><button class="btn primary" data-act="edit-save">Сохранить шаблон</button><button class="btn ghost" data-act="edit-cancel">Отмена</button></div>
+    <button class="btn block" data-act="add-ex">${L.addEx}</button>
+    <div class="row" style="margin-top:18px"><button class="btn primary" data-act="edit-save">${L.saveTpl}</button><button class="btn ghost" data-act="edit-cancel">${L.cancel}</button></div>
   </div>`;
 }
 
 function viewHistory(){
-  if(!sessions.length) return `<h1 style="margin-bottom:12px">История</h1><div class="empty"><strong>Пока пусто</strong><span>Завершённые тренировки появятся здесь: дата, длительность и все подходы.</span></div>`+viewBackup();
+  const L=T();
+  if(!sessions.length) return `<h1 style="margin-bottom:12px">${L.historyH}</h1><div class="empty"><strong>${L.histEmptyH}</strong><span>${L.histEmptyT}</span></div>`+viewBackup();
   const now=new Date();
   const thisMonth=sessions.filter(s=>{const d=new Date(s.finishedAt);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;
   const weekAgo=Date.now()-7*864e5;
   const week=sessions.filter(s=>s.finishedAt>=weekAgo).length;
-  let html=`<h1 style="margin-bottom:12px">История</h1>
-    <div class="stats"><div class="stat"><span class="num">${week}</span><span>за 7 дней</span></div><div class="stat"><span class="num">${thisMonth}</span><span>в этом месяце</span></div><div class="stat"><span class="num">${sessions.length}</span><span>всего</span></div></div>
+  let html=`<h1 style="margin-bottom:12px">${L.historyH}</h1>
+    <div class="stats"><div class="stat"><span class="num">${week}</span><span>${L.last7}</span></div><div class="stat"><span class="num">${thisMonth}</span><span>${L.thisMonth}</span></div><div class="stat"><span class="num">${sessions.length}</span><span>${L.total}</span></div></div>
     ${viewCalendar()}
     <div class="stack" style="margin-top:12px">`;
   let month="";
   sessions.forEach(s=>{
-    const m=new Date(s.finishedAt).toLocaleDateString("ru-RU",{month:"long",year:"numeric"});
+    const m=monthTitle(new Date(s.finishedAt));
     if(m!==month){month=m;html+=`<div class="month">${esc(m)}</div>`}
     const mins=Math.max(1,Math.round((s.finishedAt-s.startedAt)/60000));
     const conf=ui.confirm==="ses:"+s.id;
-    html+=`<details class="card hist"><summary><div><h3>${esc(s.name||"Тренировка")}</h3><div class="meta">${esc(dLong(s.finishedAt))} · ${mins} мин</div></div><span class="chev">▶</span></summary>
+    html+=`<details class="card hist"><summary><div><h3>${esc(s.name||L.workout)}</h3><div class="meta">${esc(dLong(s.finishedAt))} · ${mins} ${L.min}</div></div><span class="chev">▶</span></summary>
       <div class="detail">${(s.exercises||[]).map(e=>`<div class="dex"><span>${esc(e.name)}</span><span class="dsets">${esc(e.sets.map(x=>setText(e,x)).join(" · "))}</span></div>`).join("")}
       ${s.note?`<div class="meta">${esc(s.note)}</div>`:""}
       <div class="row">${conf
-        ?`<span class="muted">Удалить из истории?</span><button class="btn danger small" data-act="ses-del-yes" data-id="${esc(s.id)}">Удалить</button><button class="btn ghost small" data-act="confirm-no">Нет</button>`
-        :`<button class="btn small" data-act="repeat" data-id="${esc(s.id)}">Повторить</button><button class="btn small" data-act="ses-to-tpl" data-id="${esc(s.id)}">Сделать шаблоном</button><button class="btn ghost small" data-act="ses-del-ask" data-id="${esc(s.id)}">Удалить</button>`}</div></div></details>`;
+        ?`<span class="muted">${L.delSesQ}</span><button class="btn danger small" data-act="ses-del-yes" data-id="${esc(s.id)}">${L.del}</button><button class="btn ghost small" data-act="confirm-no">${L.no}</button>`
+        :`<button class="btn small" data-act="repeat" data-id="${esc(s.id)}">${L.repeat}</button><button class="btn small" data-act="ses-to-tpl" data-id="${esc(s.id)}">${L.makeTpl}</button><button class="btn ghost small" data-act="ses-del-ask" data-id="${esc(s.id)}">${L.del}</button>`}</div></div></details>`;
   });
   return html+"</div>"+viewBackup();
 }
 
 function viewCalendar(){
-  const y=cal.y,m=cal.m,first=new Date(y,m,1),off=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+  const L=T(),y=cal.y,m=cal.m,first=new Date(y,m,1),off=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
   const counts={};sessions.forEach(s=>{const k=dayKey(s.finishedAt);counts[k]=(counts[k]||0)+1});
   const todayK=dayKey(Date.now());
-  const title=first.toLocaleDateString("ru-RU",{month:"long",year:"numeric"}).replace(" г.","");
-  let cells=["пн","вт","ср","чт","пт","сб","вс"].map(w=>`<div class="cal-wd">${w}</div>`).join("");
+  let cells="";
+  for(let i=0;i<7;i++)cells+=`<div class="cal-wd">${esc(new Date(2024,0,1+i).toLocaleDateString(loc(),{weekday:"short"}).replace(".",""))}</div>`;
   for(let i=0;i<off;i++)cells+=`<span class="day out" aria-hidden="true"></span>`;
   for(let d=1;d<=days;d++){
     const k=y+"-"+m+"-"+d,c=counts[k]||0,cls="day"+(c?" has-w":"")+(k===todayK?" today":"");
     cells+=c?`<button class="${cls}" data-act="day" data-key="${k}" aria-describedby="tip">${d}${c>1?`<span class="cnt">${c}</span>`:""}</button>`:`<span class="${cls}">${d}</span>`;
   }
-  return `<div class="cal"><div class="cal-head"><button class="btn ghost small" data-act="cal" data-d="-1" aria-label="Предыдущий месяц">‹</button><h3>${esc(title)}</h3><button class="btn ghost small" data-act="cal" data-d="1" aria-label="Следующий месяц">›</button></div><div class="cal-grid">${cells}</div></div>`;
+  return `<div class="cal"><div class="cal-head"><button class="btn ghost small" data-act="cal" data-d="-1" aria-label="${L.prevMonth}">‹</button><h3>${esc(monthTitle(first))}</h3><button class="btn ghost small" data-act="cal" data-d="1" aria-label="${L.nextMonth}">›</button></div><div class="cal-grid">${cells}</div></div>`;
 }
 function showTip(el){
   const list=sessions.filter(s=>dayKey(s.finishedAt)===el.dataset.key).sort((a,b)=>a.finishedAt-b.finishedAt);
   if(!list.length)return;
   const tip=$("#tip");
-  tip.innerHTML=`<div class="td">${esc(dLong(list[0].finishedAt))}</div>`+list.map(s=>`<div>${esc(s.name||"Тренировка")}</div>`).join("");
+  tip.innerHTML=`<div class="td">${esc(dLong(list[0].finishedAt))}</div>`+list.map(s=>`<div>${esc(s.name||T().workout)}</div>`).join("");
   tip.hidden=false;
   const r=el.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;
   let left=Math.min(Math.max(8,r.left+r.width/2-tw/2),window.innerWidth-tw-8);
@@ -482,18 +582,29 @@ document.addEventListener("focusin",e=>{if(e.target.matches(".day.has-w"))showTi
 document.addEventListener("focusout",e=>{if(e.target.matches(".day.has-w"))hideTip()});
 window.addEventListener("scroll",hideTip,{passive:true});
 
+function renderChrome(){
+  const L=T();
+  document.documentElement.lang=lang;
+  $("#today").textContent=new Date().toLocaleDateString(loc(),{day:"numeric",month:lang==="ru"?"long":"short"});
+  document.querySelectorAll("[data-act='lang']").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lang===lang)));
+  $("#tabs").setAttribute("aria-label",L.nav);
+  $("#tab-templates").textContent=L.tTemplates;
+  $("#tab-history").textContent=L.tHistory;
+}
 const openDetails=new Set();
 function render(){
+  const L=T();
   hideTip();
+  renderChrome();
   document.querySelectorAll("details.hist[open] [data-act='repeat']").forEach(b=>openDetails.add(b.dataset.id));
   ["workout","templates","history"].forEach(t=>{const b=$("#tab-"+t);b.setAttribute("aria-current",String(t===tab));});
-  $("#tab-workout").innerHTML="Тренировка"+(active?'<span class="dot" aria-label="идёт"></span>':"");
+  $("#tab-workout").innerHTML=esc(L.tWorkout)+(active?`<span class="dot" aria-label="${L.running}"></span>`:"");
   const b=$("#banner");
   const standalone=window.navigator.standalone===true||matchMedia("(display-mode: standalone)").matches;
   const ios=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
   b.innerHTML=(!standalone&&ios&&!LS.get("podhod:hideInstall",false))
-    ?`<div class="banner"><b>Установите приложение:</b> в Safari нажмите «Поделиться», затем «На экран „Домой“». Тренировки, записанные в браузере, в установленное приложение не перенесутся. <button class="btn ghost small" data-act="hide-install">Понятно</button></div>`:"";
-  if(!(ready.templates&&ready.sessions&&ready.active)){$("#main").innerHTML='<p class="muted">Загружаю ваши тренировки…</p>';return}
+    ?`<div class="banner"><b>${L.installB}</b> ${L.installT} <button class="btn ghost small" data-act="hide-install">${L.gotIt}</button></div>`:"";
+  if(!(ready.templates&&ready.sessions&&ready.active)){$("#main").innerHTML=`<p class="muted">${L.loading}</p>`;return}
   $("#main").innerHTML=tab==="workout"?viewWorkout():tab==="templates"?viewTemplates():viewHistory();
   document.querySelectorAll("details.hist").forEach(d=>{const r=d.querySelector("[data-act='repeat']");if(r&&openDetails.has(r.dataset.id))d.open=true});
   document.querySelectorAll("details.hist").forEach(d=>d.addEventListener("toggle",()=>{const r=d.querySelector("[data-act='repeat']");if(r&&!d.open)openDetails.delete(r.dataset.id)}));
@@ -510,20 +621,21 @@ async function keepAwake(){try{if(active&&navigator.wakeLock&&document.visibilit
 document.addEventListener("visibilitychange",keepAwake);
 
 function startWorkout(name,exs,templateId){
-  if(active){tab="workout";render();toast("Сначала завершите текущую тренировку");return}
-  active={id:uid(),name:name||"Тренировка",templateId:templateId||null,startedAt:Date.now(),restFrom:null,
+  if(active){tab="workout";render();toast(T().finishFirst);return}
+  active={id:uid(),name:name||T().workout,templateId:templateId||null,startedAt:Date.now(),restFrom:null,
     exercises:(exs&&exs.length?exs:[{name:"",kind:"wr",sets:[{w:"",r:""}]}]).map(e=>({name:e.name,kind:e.kind||"wr",sets:(e.sets&&e.sets.length?e.sets:[{w:"",r:""}]).map(s=>({w:s.w==null?"":s.w,r:s.r==null?"":s.r,done:false,drops:cleanDrops(s)}))}))};
   ui.finishing=false;ui.confirm=null;tab="workout";LS.set("podhod:tab",tab);flushActive();render();window.scrollTo(0,0);keepAwake();
 }
 
 async function finishSave(){
+  const L=T();
   const anyDone=active.exercises.some(e=>e.sets.some(s=>s.done));
-  const exs=active.exercises.map(e=>({name:(e.name||"").trim()||"Упражнение",kind:e.kind||"wr",
+  const exs=active.exercises.map(e=>({name:(e.name||"").trim()||L.exercise,kind:e.kind||"wr",
       sets:e.sets.filter(s=>anyDone?s.done:(String(s.w).trim()!==""||String(s.r).trim()!=="")).map(s=>e.kind==="wr"||!e.kind?withDrops({w:s.w,r:s.r},s):{w:s.w,r:s.r})}))
     .filter(e=>e.sets.length);
-  if(!exs.length){toast("Заполните хотя бы один подход");return}
+  if(!exs.length){toast(L.fillOne);return}
   const keep=$("#opt-keep")&&$("#opt-keep").checked, mk=$("#opt-new")&&$("#opt-new").checked, nm=($("#opt-name")&&$("#opt-name").value.trim())||active.name;
-  const ses={name:(active.name||"").trim()||"Тренировка",templateId:active.templateId,startedAt:active.startedAt,finishedAt:Date.now(),exercises:exs};
+  const ses={name:(active.name||"").trim()||L.workout,templateId:active.templateId,startedAt:active.startedAt,finishedAt:Date.now(),exercises:exs};
   try{
     await store.put("sessions",active.id,ses);
     if(keep){const t=templates.find(t=>t.id===active.templateId);if(t)await store.put("templates",t.id,Object.assign({},t,{exercises:planFrom(exs),updatedAt:Date.now()}))}
@@ -531,43 +643,35 @@ async function finishSave(){
   }catch(e){saveErr(e);return}
   active=null;ui.finishing=false;ui.keepTpl=false;ui.newTpl=false;ui.newTplName="";flushActive();
   try{wake&&wake.release()}catch(e){} wake=null;
-  tab="history";LS.set("podhod:tab",tab);render();window.scrollTo(0,0);toast("Тренировка сохранена");
+  tab="history";LS.set("podhod:tab",tab);render();window.scrollTo(0,0);toast(L.saved);
 }
 
 function seed(){
   const now=Date.now();
-  const t1={name:"Пример: ноги и ягодицы",note:"Пример шаблона, можно изменить или удалить. Отдых 2 мин.",updatedAt:now,exercises:[
-    {name:"Приседания со штангой",kind:"wr",sets:[{w:30,r:10},{w:40,r:8},{w:40,r:8},{w:40,r:8}]},
-    {name:"Румынская тяга",kind:"wr",sets:[{w:30,r:10},{w:30,r:10},{w:30,r:10}]},
-    {name:"Ягодичный мост со штангой",kind:"wr",sets:[{w:40,r:12},{w:40,r:12},{w:40,r:12}]},
-    {name:"Болгарские сплит-приседания",kind:"wr",sets:[{w:6,r:10},{w:6,r:10},{w:6,r:10}]},
-    {name:"Планка",kind:"t",sets:[{w:"",r:45},{w:"",r:45}]}]};
-  const t2={name:"Пример: верх тела",note:"Пример шаблона, можно изменить или удалить.",updatedAt:now-1,exercises:[
-    {name:"Жим гантелей на наклонной скамье",kind:"wr",sets:[{w:8,r:10},{w:8,r:10},{w:8,r:10}]},
-    {name:"Тяга верхнего блока",kind:"wr",sets:[{w:30,r:12},{w:30,r:12},{w:30,r:12}]},
-    {name:"Разведения гантелей в стороны",kind:"wr",sets:[{w:4,r:15},{w:4,r:15},{w:4,r:15}]},
-    {name:"Отжимания",kind:"r",sets:[{w:"",r:10},{w:"",r:10}]}]};
-  Promise.all([store.put("templates",uid(),t1),store.put("templates",uid(),t2)]).then(()=>toast("Добавлены два примера")).catch(saveErr);
+  Promise.all(T().samples.map((s,i)=>store.put("templates",uid(),Object.assign(clone(s),{updatedAt:now-i}))))
+    .then(()=>toast(T().samplesAdded)).catch(saveErr);
 }
 
 document.addEventListener("click",e=>{
   const el=e.target.closest("[data-act]");
   if(!el||el.dataset.act!=="day")hideTip();
   if(!el)return;
+  const L=T();
   const a=el.dataset.act,id=el.dataset.id;
   const obj=scopeObj(el);
   const exEl=el.closest("[data-ei]"),ei=exEl?+exEl.dataset.ei:-1;
   const ex=obj&&ei>=0?obj.exercises[ei]:null;
   const siEl=el.closest("[data-si]"),si=siEl?+siEl.dataset.si:-1;
   switch(a){
+    case "lang": if(el.dataset.lang!==lang){lang=el.dataset.lang;LS.set("podhod:lang",lang);refreshDatalist();render()} return;
     case "tab": tab=el.dataset.tab;LS.set("podhod:tab",tab);ui.confirm=null;render();window.scrollTo(0,0);return;
-    case "start-empty": return startWorkout("Тренировка",null,null);
+    case "start-empty": return startWorkout(L.workout,null,null);
     case "start-tpl":{const t=templates.find(t=>t.id===id);if(t)startWorkout(t.name,clone(t.exercises||[]),t.id);return}
     case "repeat":{const s=sessions.find(s=>s.id===id);if(s)startWorkout(s.name,clone(s.exercises||[]),s.templateId&&templates.some(t=>t.id===s.templateId)?s.templateId:null);return}
     case "add-ex":{obj.exercises.push({name:"",kind:"wr",sets:[{w:"",r:"",done:false}]});touched(el);render();const ins=document.querySelectorAll(".ex-name");ins[ins.length-1]&&ins[ins.length-1].focus();return}
     case "del-ex": obj.exercises.splice(ei,1);touched(el);render();return;
     case "move-ex":{const j=ei+(+el.dataset.d);if(j<0||j>=obj.exercises.length)return;const t=obj.exercises[ei];obj.exercises[ei]=obj.exercises[j];obj.exercises[j]=t;touched(el);render();return}
-    case "add-set":{const l=ex.sets[ex.sets.length-1]||{w:"",r:""};ex.sets.push({w:"",r:"",done:false});touched(el);render();return}
+    case "add-set": ex.sets.push({w:"",r:"",done:false});touched(el);render();return;
     case "add-drop":{const s=ex.sets[si];s.drops=s.drops||[];s.drops.push({w:"",r:""});touched(el);render();
       const inp=document.querySelector(`[data-ei="${ei}"] [data-si="${si}"] [data-di="${s.drops.length-1}"] input`);inp&&inp.focus();return}
     case "del-drop":{const di=+el.closest("[data-di]").dataset.di;ex.sets[si].drops.splice(di,1);touched(el);render();return}
@@ -581,20 +685,20 @@ document.addEventListener("click",e=>{
     case "finish-cancel": ui.finishing=false;render();return;
     case "finish-save": finishSave();return;
     case "discard-ask": ui.confirm="discard";render();return;
-    case "discard-yes": active=null;ui.confirm=null;ui.finishing=false;flushActive();try{wake&&wake.release()}catch(e){}wake=null;render();toast("Тренировка отменена");return;
+    case "discard-yes": active=null;ui.confirm=null;ui.finishing=false;flushActive();try{wake&&wake.release()}catch(e){}wake=null;render();toast(L.cancelled);return;
     case "confirm-no": ui.confirm=null;render();return;
     case "tpl-new": editing={id:uid(),isNew:true,data:{name:"",note:"",exercises:[{name:"",kind:"wr",sets:[{w:"",r:""},{w:"",r:""},{w:"",r:""}]}]}};tab="templates";render();window.scrollTo(0,0);return;
     case "tpl-edit":{const t=templates.find(t=>t.id===id);if(!t)return;editing={id:t.id,isNew:false,data:clone({name:t.name,note:t.note||"",exercises:t.exercises||[]})};render();window.scrollTo(0,0);return}
-    case "tpl-copy":{const t=templates.find(t=>t.id===id);if(!t)return;store.put("templates",uid(),{name:t.name+" (копия)",note:t.note||"",exercises:clone(t.exercises||[]),updatedAt:Date.now()}).then(()=>toast("Копия создана")).catch(saveErr);return}
+    case "tpl-copy":{const t=templates.find(t=>t.id===id);if(!t)return;store.put("templates",uid(),{name:t.name+L.copySuffix,note:t.note||"",exercises:clone(t.exercises||[]),updatedAt:Date.now()}).then(()=>toast(L.copyMade)).catch(saveErr);return}
     case "tpl-del-ask": ui.confirm="tpl:"+id;render();return;
-    case "tpl-del-yes": ui.confirm=null;store.remove("templates",id).then(()=>toast("Шаблон удалён")).catch(saveErr);return;
+    case "tpl-del-yes": ui.confirm=null;store.remove("templates",id).then(()=>toast(L.tplDeleted)).catch(saveErr);return;
     case "edit-save":{
-      const d=editing.data;if(!d.name.trim()){toast("Дайте шаблону название");const ti=document.querySelector("[data-scope='edit'] .title-input");ti&&ti.focus();return}
-      const body={name:d.name.trim(),note:(d.note||"").trim(),exercises:planFrom(d.exercises.filter(e=>(e.name||"").trim()||e.sets.length).map(e=>Object.assign({},e,{name:(e.name||"").trim()||"Упражнение"}))),updatedAt:Date.now()};
-      store.put("templates",editing.id,body).then(()=>{editing=null;render();toast("Шаблон сохранён")}).catch(saveErr);return}
+      const d=editing.data;if(!d.name.trim()){toast(L.nameTpl);const ti=document.querySelector("[data-scope='edit'] .title-input");ti&&ti.focus();return}
+      const body={name:d.name.trim(),note:(d.note||"").trim(),exercises:planFrom(d.exercises.filter(e=>(e.name||"").trim()||e.sets.length).map(e=>Object.assign({},e,{name:(e.name||"").trim()||L.exercise}))),updatedAt:Date.now()};
+      store.put("templates",editing.id,body).then(()=>{editing=null;render();toast(L.tplSaved)}).catch(saveErr);return}
     case "edit-cancel": editing=null;render();return;
     case "ses-del-ask": ui.confirm="ses:"+id;render();return;
-    case "ses-del-yes": ui.confirm=null;store.remove("sessions",id).then(()=>toast("Удалено из истории")).catch(saveErr);return;
+    case "ses-del-yes": ui.confirm=null;store.remove("sessions",id).then(()=>toast(L.delFromHist)).catch(saveErr);return;
     case "ses-to-tpl":{const s=sessions.find(s=>s.id===id);if(!s)return;editing={id:uid(),isNew:true,data:{name:s.name||"",note:"",exercises:planFrom(s.exercises||[])}};tab="templates";LS.set("podhod:tab",tab);render();window.scrollTo(0,0);return}
     case "seed": seed();return;
     case "day": showTip(el);return;
@@ -639,7 +743,7 @@ setInterval(()=>{
 },1000);
 
 /* ---------- boot ---------- */
-$("#today").textContent=new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
+render();
 (async function boot(){
   await store.init();
   store.subscribe("templates",docs=>{templates=docs;ready.templates=true;refreshDatalist();if(ready.active)render()});
