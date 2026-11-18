@@ -107,7 +107,7 @@ button{cursor:pointer}
 .ex-name{flex:1;min-width:0;border:0;border-bottom:1.5px solid var(--line);background:transparent;font-family:var(--display);font-style:italic;font-weight:800;font-size:22px;text-transform:uppercase;padding:4px 0;border-radius:0;color:var(--ink)}
 .ex-name::placeholder{color:var(--muted);text-transform:none;font-weight:600}
 .ex-name:focus{border-bottom-color:var(--accent);outline:none}
-.kind{border:0;background:var(--accent);color:var(--accent-ink);font-size:16px;font-weight:600;padding:6px 6px;max-width:120px;margin-right:14px;clip-path:var(--cut)}
+.kind{-webkit-appearance:none;appearance:none;border:0;border-radius:0;background-color:var(--accent);background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M0 0h10L5 6z%27 fill=%27%23141414%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;color:var(--accent-ink);font-size:15px;font-weight:600;line-height:1.2;padding:7px 28px 7px 14px;max-width:150px;margin-right:14px;clip-path:var(--cut)}
 .hint{font-size:13px;color:var(--muted);margin:0}
 .hint b{font-weight:600;color:var(--ink)}
 .sets{display:flex;flex-direction:column;gap:6px}
@@ -117,7 +117,7 @@ button{cursor:pointer}
 .plan .set.k-r,.plan .set.k-t{grid-template-columns:24px 1fr 28px}
 .set.k-c{grid-template-columns:1fr 1fr 48px}
 .plan .set.k-c{grid-template-columns:1fr 1fr}
-.add-row>.btn{flex:1}
+.add-row>.btn{flex:1;white-space:nowrap;padding-left:8px;padding-right:8px}
 .setgrp{display:flex;flex-direction:column;gap:4px}
 .set.drop input{min-height:40px;font-size:20px;box-shadow:inset 0 -3px 0 var(--pink)}
 .set.drop .n{color:var(--pink);font-size:18px;font-weight:900}
@@ -176,8 +176,8 @@ details.hist[open] summary .chev{transform:rotate(90deg)}
 .month{font-family:var(--display);font-style:italic;font-weight:800;font-size:17px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:8px}
 
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--bg);border-top:1px solid #2A2A2A;padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-nav.tabs .in{max-width:620px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-nav.tabs button{min-height:50px;border:0;background:transparent;font-family:var(--display);font-style:italic;font-size:19px;font-weight:800;text-transform:uppercase;color:#E0E0E0;letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;clip-path:var(--cut-lg)}
+nav.tabs .in{max-width:620px;margin:0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+nav.tabs button{min-height:50px;border:0;background:transparent;font-family:var(--display);font-style:italic;font-size:19px;font-weight:800;text-transform:uppercase;color:#E0E0E0;letter-spacing:.02em;white-space:nowrap;padding:0 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;clip-path:var(--cut-lg)}
 nav.tabs button[aria-current="true"]{color:var(--accent-ink);background:var(--accent)}
 nav.tabs .dot{width:6px;height:6px;border-radius:50%;background:var(--pink)}
 
@@ -186,10 +186,8 @@ nav.tabs .dot{width:6px;height:6px;border-radius:50%;background:var(--pink)}
 .backup{margin-top:28px}
 .backup .meta{font-size:13px;color:var(--muted)}
 .top-r{display:flex;gap:10px;align-items:center;position:relative;z-index:1}
-.lang{display:inline-flex;gap:2px}
-.lang button{border:0;background:transparent;min-height:32px;min-width:40px;padding:0 10px;font-family:var(--display);font-style:italic;font-weight:800;font-size:16px;letter-spacing:.04em;color:#E0E0E0;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
-.lang button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
-@media (max-width:480px){.ex-head{flex-wrap:wrap}.ex-name{flex:1 1 calc(100% - 40px)}.kind{margin-left:30px}.title-input{font-size:32px}}
+.lang{-webkit-appearance:none;appearance:none;border:0;border-radius:0;min-height:32px;padding:0 26px 0 14px;background-color:var(--accent);background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M0 0h10L5 6z%27 fill=%27%23141414%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;color:var(--accent-ink);font-family:var(--display);font-style:italic;font-weight:800;font-size:16px;letter-spacing:.04em;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+@media (max-width:480px){.ex-head{flex-wrap:wrap}.ex-name{flex:1 1 calc(100% - 40px)}.kind{margin-left:30px}.title-input{font-size:32px}nav.tabs button{font-size:16px;letter-spacing:0;padding:0 12px}.add-row>.btn{font-size:16px}}
 </style>
 </head>
 <body>
@@ -197,7 +195,7 @@ nav.tabs .dot{width:6px;height:6px;border-radius:50%;background:var(--pink)}
   <header class="top">
     <div class="brand">ПОД<b>ХОД</b></div>
     <div class="top-r"><span class="muted" id="today"></span>
-      <div class="lang" role="group" aria-label="Language / Язык"><button data-act="lang" data-lang="en">EN</button><button data-act="lang" data-lang="ru">RU</button></div>
+      <select class="lang" id="lang" aria-label="Language / Язык"><option value="en">EN</option><option value="ru">RU</option></select>
     </div>
   </header>
   <div id="banner"></div>
@@ -623,7 +621,7 @@ function renderChrome(){
   const L=T();
   document.documentElement.lang=lang;
   $("#today").textContent=new Date().toLocaleDateString(loc(),{day:"numeric",month:lang==="ru"?"long":"short"});
-  document.querySelectorAll("[data-act='lang']").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lang===lang)));
+  $("#lang").value=lang;
   $("#tabs").setAttribute("aria-label",L.nav);
   $("#tab-templates").textContent=L.tTemplates;
   $("#tab-history").textContent=L.tHistory;
@@ -700,7 +698,6 @@ document.addEventListener("click",e=>{
   const ex=obj&&ei>=0?obj.exercises[ei]:null;
   const siEl=el.closest("[data-si]"),si=siEl?+siEl.dataset.si:-1;
   switch(a){
-    case "lang": if(el.dataset.lang!==lang){lang=el.dataset.lang;LS.set("podhod:lang",lang);refreshDatalist();render()} return;
     case "tab": tab=el.dataset.tab;LS.set("podhod:tab",tab);ui.confirm=null;render();window.scrollTo(0,0);return;
     case "start-empty": return startWorkout(L.workout,null,null);
     case "start-cardio": return startWorkout(L.cardioW,[{name:L.cardioName,kind:"c",sets:[{w:"",r:""}]}],null);
@@ -747,6 +744,7 @@ document.addEventListener("click",e=>{
     case "cal":{cal.m+=+el.dataset.d;if(cal.m<0){cal.m=11;cal.y--}if(cal.m>11){cal.m=0;cal.y++}render();return}
   }
 });
+$("#lang").addEventListener("change",e=>{const v=e.target.value==="ru"?"ru":"en";if(v!==lang){lang=v;LS.set("podhod:lang",lang);refreshDatalist();render()}});
 $("#import-file").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];if(f)importData(f);e.target.value=""});
 document.addEventListener("input",e=>{
   const el=e.target;
