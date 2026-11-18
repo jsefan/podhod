@@ -170,7 +170,8 @@ details.hist[open] summary .chev{transform:rotate(90deg)}
 .day.has-w.today{background:var(--pink);color:var(--pink-ink);box-shadow:none}
 .day .cnt{position:absolute;top:3px;right:8px;font-size:11px;line-height:1}
 .day.out{visibility:hidden}
-.tip{position:fixed;z-index:30;background:var(--accent);color:var(--accent-ink);padding:8px 12px;font-size:13px;line-height:1.35;max-width:240px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.tip{position:fixed;z-index:30;background:linear-gradient(315deg,transparent 13px,var(--accent) 13px);color:var(--accent-ink);padding:10px 22px 14px 14px;font-size:13px;line-height:1.35;max-width:240px;pointer-events:none;transform:rotate(-1.5deg);filter:drop-shadow(0 8px 12px rgba(0,0,0,.6)) drop-shadow(0 2px 3px rgba(0,0,0,.4))}
+.tip::after{content:"";position:absolute;right:0;bottom:0;width:18px;height:18px;background:linear-gradient(135deg,#C7AE00 50%,transparent 50%)}
 .tip .td{font-size:11px;text-transform:uppercase;letter-spacing:.08em;opacity:.75;margin-bottom:2px;font-weight:700}
 .tip div+div{margin-top:2px}
 .month{font-family:var(--display);font-style:italic;font-weight:800;font-size:17px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:8px}
