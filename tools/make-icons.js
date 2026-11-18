@@ -3,8 +3,8 @@ const fs = require("fs");
 const path = require("path");
 const zlib = require("zlib");
 
-const BG = [0x1f, 0x4f, 0xd1];
-const FG = [0xff, 0xff, 0xff];
+const BG = [0x0e, 0x0e, 0x0e];
+const FG = [0xff, 0xe1, 0x1a];
 
 // Shapes in a 0..1 coordinate space: rounded rectangles {x, y, w, h, r}
 function barbell(scale) {
