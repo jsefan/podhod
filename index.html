@@ -225,7 +225,7 @@ en:{
   installB:"Install the app:", installT:"in Safari tap Share, then “Add to Home Screen”. Workouts logged in the browser won’t carry over to the installed app.", gotIt:"Got it",
   saveErr:"Couldn’t save: browser storage is full",
   backupH:"Backup", backupMeta:"Your workouts are stored only on this phone. Save a copy to Files or iCloud Drive so nothing is lost when you change phones.",
-  lastBackup:d=>` Last backup: ${d}.`, noBackup:" No backups yet.", backupSave:"Save a copy", backupRestore:"Restore from file", backupSaved:"Copy saved",
+  lastBackup:d=>` Last backup: ${d}.`, noBackup:" No backups yet.", csvBtn:"Export log (CSV)", csvMeta:"A spreadsheet of all workouts, one row per set — opens in Excel, Numbers or Google Sheets.", csvEmpty:"No workouts to export yet", backupSave:"Save a copy", backupRestore:"Restore from file", backupSaved:"Copy saved",
   restored:(ns,nt)=>`Restored: ${ns} ${pl(ns,"ses")}, ${nt} ${pl(nt,"tpl")}`, notBackup:"This isn’t a Podhod backup file",
   kinds:{wr:"kg × reps",r:"reps",t:"seconds",c:"cardio"}, km:"km", aMin:"Minutes", aKm:"Distance, km", addCardio:"+ Cardio", cardioW:"Cardio", cardioName:"Running", aCardioDone:"Cardio done", kg:"kg", reps:"reps", sec:"sec", secShort:"s", colNo:"#",
   aW:si=>`Weight, kg, set ${si}`, aR:si=>`Reps, set ${si}`, aS:si=>`Seconds, set ${si}`, aDone:si=>`Set ${si} done`,
@@ -268,7 +268,7 @@ ru:{
   installB:"Установите приложение:", installT:"в Safari нажмите «Поделиться», затем «На экран „Домой“». Тренировки, записанные в браузере, в установленное приложение не перенесутся.", gotIt:"Понятно",
   saveErr:"Не удалось сохранить: память браузера заполнена",
   backupH:"Резервная копия", backupMeta:"Тренировки хранятся только на этом телефоне. Сохраняйте копию в «Файлы» или iCloud Drive, чтобы ничего не потерять при смене телефона.",
-  lastBackup:d=>` Последняя копия: ${d}.`, noBackup:" Копий ещё не было.", backupSave:"Сохранить копию", backupRestore:"Восстановить из файла", backupSaved:"Копия сохранена",
+  lastBackup:d=>` Последняя копия: ${d}.`, noBackup:" Копий ещё не было.", csvBtn:"Выгрузить журнал (CSV)", csvMeta:"Таблица всех тренировок, по строке на подход — открывается в Excel, Numbers или Google Таблицах.", csvEmpty:"Пока нечего выгружать", backupSave:"Сохранить копию", backupRestore:"Восстановить из файла", backupSaved:"Копия сохранена",
   restored:(ns,nt)=>`Восстановлено: ${ns} ${pl(ns,"ses")}, ${nt} ${pl(nt,"tpl")}`, notBackup:"Это не файл копии «Подхода»",
   kinds:{wr:"кг × повт",r:"повторы",t:"секунды",c:"кардио"}, km:"км", aMin:"Минуты", aKm:"Дистанция, км", addCardio:"+ Кардио", cardioW:"Кардио", cardioName:"Бег", aCardioDone:"Кардио выполнено", kg:"кг", reps:"повт", sec:"сек", secShort:"с", colNo:"№",
   aW:si=>`Вес, кг, подход ${si}`, aR:si=>`Повторы, подход ${si}`, aS:si=>`Секунды, подход ${si}`, aDone:si=>`Подход ${si} выполнен`,
@@ -348,17 +348,47 @@ const store={mode:"local",subs:{},
 const saveErr=()=>toast(T().saveErr);
 
 /* ---------- backup to a file ---------- */
+async function saveFile(text,name,type){
+  const blob=new Blob([text],{type});
+  try{
+    const file=new File([blob],name,{type});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return "shared"}
+  }catch(e){if(e&&e.name==="AbortError")return false}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);return "downloaded";
+}
+const fileDate=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 async function exportData(){
   const data={app:"podhod",version:1,exportedAt:Date.now(),templates,sessions};
-  const name="podhod-"+new Date().toISOString().slice(0,10)+".json";
-  const blob=new Blob([JSON.stringify(data)],{type:"application/json"});
-  const done=()=>{LS.set("podhod:lastBackup",Date.now());render()};
-  try{
-    const file=new File([blob],name,{type:"application/json"});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});done();toast(T().backupSaved);return}
-  }catch(e){if(e&&e.name==="AbortError")return}
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
-  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);done();
+  const r=await saveFile(JSON.stringify(data),"podhod-"+fileDate()+".json","application/json");
+  if(!r)return;LS.set("podhod:lastBackup",Date.now());render();if(r==="shared")toast(T().backupSaved);
+}
+/* Workout log as CSV: one row per set (drops get their own rows), comma-separated, UTF-8 */
+function sessionsCsv(){
+  const KIND={wr:"weight_reps",r:"reps",t:"time",c:"cardio"};
+  const q=v=>{v=v==null?"":String(v);return /[",\r\n]/.test(v)?"\""+v.replace(/"/g,"\"\"")+"\"":v};
+  const n=v=>{v=String(v==null?"":v).trim().replace(",",".");return v===""?"":v};
+  const p2=x=>String(x).padStart(2,"0");
+  const rows=[["date","time","duration_min","workout","exercise","type","set","drop","weight_kg","reps","seconds","minutes","distance_km"]];
+  [...sessions].sort((a,b)=>a.finishedAt-b.finishedAt).forEach(ses=>{
+    const st=new Date(ses.startedAt||ses.finishedAt),date=st.getFullYear()+"-"+p2(st.getMonth()+1)+"-"+p2(st.getDate()),time=p2(st.getHours())+":"+p2(st.getMinutes());
+    const dur=ses.startedAt?Math.round((ses.finishedAt-ses.startedAt)/60000):"";
+    (ses.exercises||[]).forEach(ex=>{const k=ex.kind||"wr";
+      (ex.sets||[]).forEach((st2,i)=>{
+        const base=[date,time,dur,ses.name||"",ex.name||"",KIND[k]||k,i+1];
+        if(k==="c")rows.push([...base,"","","","",n(st2.r),n(st2.w)]);
+        else if(k==="t")rows.push([...base,"","","",n(st2.r),"",""]);
+        else if(k==="r")rows.push([...base,"","",n(st2.r),"","",""]);
+        else{rows.push([...base,"",n(st2.w),n(st2.r),"","",""]);
+          (st2.drops||[]).forEach((d,j)=>rows.push([...base,j+1,n(d.w),n(d.r),"","",""]))}
+      })})
+  });
+  return "﻿"+rows.map(r=>r.map(q).join(",")).join("\r\n")+"\r\n";
+}
+async function exportCsv(){
+  if(!sessions.length){toast(T().csvEmpty);return}
+  const r=await saveFile(sessionsCsv(),"podhod-log-"+fileDate()+".csv","text/csv");
+  if(r==="shared")toast(T().backupSaved);
 }
 async function importData(file){
   try{
@@ -373,7 +403,9 @@ function viewBackup(){
   const lb=LS.get("podhod:lastBackup",0);
   return `<div class="section backup"><h2>${T().backupH}</h2>
     <div class="meta">${T().backupMeta}${lb?esc(T().lastBackup(dShort(lb))):T().noBackup}</div>
-    <div class="row"><button class="btn" data-act="backup-export">${T().backupSave}</button><button class="btn ghost" data-act="backup-import">${T().backupRestore}</button></div></div>`;
+    <div class="row"><button class="btn" data-act="backup-export">${T().backupSave}</button><button class="btn ghost" data-act="backup-import">${T().backupRestore}</button></div>
+    <div class="meta" style="margin-top:14px">${T().csvMeta}</div>
+    <div class="row"><button class="btn" data-act="export-csv">${T().csvBtn}</button></div></div>`;
 }
 
 /* ---------- state ---------- */
@@ -740,6 +772,7 @@ document.addEventListener("click",e=>{
     case "seed": seed();return;
     case "day": showTip(el);return;
     case "backup-export": exportData();return;
+    case "export-csv": exportCsv();return;
     case "backup-import": $("#import-file").click();return;
     case "hide-install": LS.set("podhod:hideInstall",true);render();return;
     case "cal":{cal.m+=+el.dataset.d;if(cal.m<0){cal.m=11;cal.y--}if(cal.m>11){cal.m=0;cal.y++}render();return}
