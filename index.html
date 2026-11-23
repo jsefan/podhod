@@ -170,6 +170,33 @@ details.hist[open] summary .chev{transform:rotate(90deg)}
 .day.has-w.today{background:var(--pink);color:var(--pink-ink);box-shadow:none}
 .day .cnt{position:absolute;top:3px;right:8px;font-size:11px;line-height:1}
 .day.out{visibility:hidden}
+.pr-line{margin:0;font-size:13px;font-weight:700;color:var(--pink)}
+.set .n.pr{font-style:normal;font-size:17px}
+.pr-n{color:var(--accent);font-weight:700}
+.dex-name{border:0;background:transparent;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:#555;text-underline-offset:3px}
+.dex-name span{color:var(--accent)}
+.prog-list{margin-top:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:0;background:var(--surface);color:var(--ink);padding:9px 16px 9px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;cursor:pointer;clip-path:var(--cut)}
+.chip-name{font-family:var(--display);font-style:italic;font-weight:800;font-size:17px;text-transform:uppercase;letter-spacing:.02em}
+.chip-best{font-size:12px;color:var(--muted)}
+.back{margin:0 0 6px -10px}
+.prog-h{margin:0 0 12px;text-transform:uppercase}
+.prog-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.prog-stats .stat:first-child{grid-column:1/-1}
+.stat .num.sm{font-size:26px}
+.chart-box{margin-top:16px}
+.chart-box h2,.prog-log h2{font-size:20px}
+.chart{display:block;width:100%;height:auto;margin-top:8px;overflow:visible}
+.chart .g{stroke:#2E2E2E;stroke-width:1}
+.chart .yl,.chart .xl{fill:var(--muted);font:500 11px Inter,sans-serif}
+.chart .yl{text-anchor:end}
+.chart .ln{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart .dot{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.chart .is-pr .dot{fill:var(--pink);r:6}
+.chart .hit{fill:transparent;cursor:pointer}
+.chart .pt:focus-visible .dot{stroke:var(--ink)}
+.legend{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:6px}
+.lg-dot{width:10px;height:10px;border-radius:50%;background:var(--pink)}
 .tip{position:fixed;z-index:30;background:linear-gradient(315deg,transparent 13px,var(--accent) 13px);color:var(--accent-ink);padding:10px 22px 14px 14px;font-size:13px;line-height:1.35;max-width:240px;pointer-events:none;transform:rotate(-1.5deg);filter:drop-shadow(0 8px 12px rgba(0,0,0,.6)) drop-shadow(0 2px 3px rgba(0,0,0,.4))}
 .tip::after{content:"";position:absolute;right:0;bottom:0;width:18px;height:18px;background:linear-gradient(135deg,#C7AE00 50%,transparent 50%)}
 .tip .td{font-size:11px;text-transform:uppercase;letter-spacing:.08em;opacity:.75;margin-bottom:2px;font-weight:700}
@@ -225,7 +252,13 @@ en:{
   installB:"Install the app:", installT:"in Safari tap Share, then “Add to Home Screen”. Workouts logged in the browser won’t carry over to the installed app.", gotIt:"Got it",
   saveErr:"Couldn’t save: browser storage is full",
   backupH:"Backup", backupMeta:"Your workouts are stored only on this phone. Save a copy to Files or iCloud Drive so nothing is lost when you change phones.",
-  lastBackup:d=>` Last backup: ${d}.`, noBackup:" No backups yet.", csvBtn:"Export log (CSV)", csvMeta:"A spreadsheet of all workouts, one row per set — opens in Excel, Numbers or Google Sheets.", csvEmpty:"No workouts to export yet", backupSave:"Save a copy", backupRestore:"Restore from file", backupSaved:"Copy saved",
+  lastBackup:d=>` Last backup: ${d}.`, noBackup:" No backups yet.", csvBtn:"Export log (CSV)",
+  newPr:"🏆 New record!", prLine:v=>`New record: ${v}`, prN:n=>`🏆 ${n}`, aPrSet:n=>`Set ${n}, new record`,
+  progListH:"Progress", progListT:"Tap an exercise to see its chart and records.", progBack:"‹ History",
+  progBest:"Record", progSessions:"Workouts", progLast:"Last time",
+  progChart:{wr:"Top weight per workout, kg",r:"Most reps per workout",t:"Longest set per workout, sec",km:"Distance, km",min:"Duration, min"},
+  progOne:"Do this exercise at least twice to see a chart.", progLegend:"record", progLog:"All workouts", progOpen:"Progress",
+  aChart:(t,n)=>`Chart: ${t}, ${n} workouts. Values are listed below.`, csvMeta:"A spreadsheet of all workouts, one row per set — opens in Excel, Numbers or Google Sheets.", csvEmpty:"No workouts to export yet", backupSave:"Save a copy", backupRestore:"Restore from file", backupSaved:"Copy saved",
   restored:(ns,nt)=>`Restored: ${ns} ${pl(ns,"ses")}, ${nt} ${pl(nt,"tpl")}`, notBackup:"This isn’t a Podhod backup file",
   kinds:{wr:"kg × reps",r:"reps",t:"seconds",c:"cardio"}, km:"km", aMin:"Minutes", aKm:"Distance, km", addCardio:"+ Cardio", cardioW:"Cardio", cardioName:"Running", aCardioDone:"Cardio done", kg:"kg", reps:"reps", sec:"sec", secShort:"s", colNo:"#",
   aW:si=>`Weight, kg, set ${si}`, aR:si=>`Reps, set ${si}`, aS:si=>`Seconds, set ${si}`, aDone:si=>`Set ${si} done`,
@@ -268,7 +301,13 @@ ru:{
   installB:"Установите приложение:", installT:"в Safari нажмите «Поделиться», затем «На экран „Домой“». Тренировки, записанные в браузере, в установленное приложение не перенесутся.", gotIt:"Понятно",
   saveErr:"Не удалось сохранить: память браузера заполнена",
   backupH:"Резервная копия", backupMeta:"Тренировки хранятся только на этом телефоне. Сохраняйте копию в «Файлы» или iCloud Drive, чтобы ничего не потерять при смене телефона.",
-  lastBackup:d=>` Последняя копия: ${d}.`, noBackup:" Копий ещё не было.", csvBtn:"Выгрузить журнал (CSV)", csvMeta:"Таблица всех тренировок, по строке на подход — открывается в Excel, Numbers или Google Таблицах.", csvEmpty:"Пока нечего выгружать", backupSave:"Сохранить копию", backupRestore:"Восстановить из файла", backupSaved:"Копия сохранена",
+  lastBackup:d=>` Последняя копия: ${d}.`, noBackup:" Копий ещё не было.", csvBtn:"Выгрузить журнал (CSV)",
+  newPr:"🏆 Новый рекорд!", prLine:v=>`Новый рекорд: ${v}`, prN:n=>`🏆 ${n}`, aPrSet:n=>`Подход ${n}, новый рекорд`,
+  progListH:"Прогресс", progListT:"Нажмите на упражнение, чтобы увидеть график и рекорды.", progBack:"‹ История",
+  progBest:"Рекорд", progSessions:"Тренировок", progLast:"Последний раз",
+  progChart:{wr:"Лучший вес за тренировку, кг",r:"Максимум повторений за тренировку",t:"Самый долгий подход, сек",km:"Дистанция, км",min:"Длительность, мин"},
+  progOne:"Чтобы появился график, нужно хотя бы две тренировки с этим упражнением.", progLegend:"рекорд", progLog:"Все тренировки", progOpen:"Прогресс",
+  aChart:(t,n)=>`График: ${t}, тренировок: ${n}. Значения перечислены ниже.`, csvMeta:"Таблица всех тренировок, по строке на подход — открывается в Excel, Numbers или Google Таблицах.", csvEmpty:"Пока нечего выгружать", backupSave:"Сохранить копию", backupRestore:"Восстановить из файла", backupSaved:"Копия сохранена",
   restored:(ns,nt)=>`Восстановлено: ${ns} ${pl(ns,"ses")}, ${nt} ${pl(nt,"tpl")}`, notBackup:"Это не файл копии «Подхода»",
   kinds:{wr:"кг × повт",r:"повторы",t:"секунды",c:"кардио"}, km:"км", aMin:"Минуты", aKm:"Дистанция, км", addCardio:"+ Кардио", cardioW:"Кардио", cardioName:"Бег", aCardioDone:"Кардио выполнено", kg:"кг", reps:"повт", sec:"сек", secShort:"с", colNo:"№",
   aW:si=>`Вес, кг, подход ${si}`, aR:si=>`Повторы, подход ${si}`, aS:si=>`Секунды, подход ${si}`, aDone:si=>`Подход ${si} выполнен`,
@@ -455,6 +494,66 @@ function refreshDatalist(){
   $("#exlist").innerHTML=[...names].sort((a,b)=>a.localeCompare(b,lang)).map(n=>`<option value="${esc(n)}">`).join("");
 }
 
+/* ---------- records ---------- */
+const exKey=ex=>norm(ex.name)+"|"+(ex.kind||"wr");
+// Comparable score of a set: [primary, secondary], or null when the set can't count
+function setScore(kind,st){
+  const w=num(st.w),r=num(st.r);
+  if(kind==="c") return w>0||r>0?[w,r]:null;       // cardio: distance first, then minutes
+  if(kind==="r"||kind==="t") return r>0?[r,0]:null; // reps / seconds
+  return w>0&&r>0?[w,r]:null;                       // weight first, then reps at that weight
+}
+const better=(a,b)=>!b||a[0]>b[0]||(a[0]===b[0]&&a[1]>b[1]);
+function scoreText(kind,sc){
+  const L=T();
+  if(kind==="c") return sc[0]>0?fmt(sc[0])+" "+L.km:fmt(sc[1])+" "+L.min;
+  if(kind==="t") return fmt(sc[0])+" "+L.secShort;
+  if(kind==="r") return fmt(sc[0])+" "+L.reps;
+  return fmt(sc[0])+" "+L.kg+" × "+fmt(sc[1]);
+}
+// Walk all saved workouts oldest→newest. A set is a record when it beats every earlier set of the
+// same exercise; the first time an exercise is done sets the baseline and is not a record.
+let prCache=null;
+function prIndex(){
+  if(prCache&&prCache.src===sessions) return prCache;
+  const best={},marks=new Set(),bySes={};
+  [...sessions].sort((a,b)=>a.finishedAt-b.finishedAt).forEach(ses=>{
+    (ses.exercises||[]).forEach((ex,ei)=>{
+      const k=ex.kind||"wr",key=exKey(ex);if(!norm(ex.name))return;
+      let run=best[key];const hadBase=!!run;
+      (ex.sets||[]).forEach((st,si)=>{const sc=setScore(k,st);if(!sc)return;
+        if(better(sc,run)){if(hadBase){marks.add(ses.id+":"+ei+":"+si);bySes[ses.id]=(bySes[ses.id]||0)+1}run=sc}});
+      if(run)best[key]=run;
+    });
+  });
+  return prCache={src:sessions,best,marks,bySes};
+}
+// Records in the running workout: done sets that beat history (and earlier done sets of this workout)
+function livePr(ex){
+  const k=ex.kind||"wr",base=prIndex().best[exKey(ex)],out=new Set();let run=base,top=null;
+  if(!base||!norm(ex.name)) return {sets:out,top};
+  (ex.sets||[]).forEach((st,si)=>{if(!st.done)return;const sc=setScore(k,st);if(sc&&better(sc,run)){out.add(si);run=sc;top=sc}});
+  return {sets:out,top};
+}
+// All saved workouts containing the exercise, oldest first, with the session's best score
+function exHistory(key){
+  const out=[];
+  [...sessions].sort((a,b)=>a.finishedAt-b.finishedAt).forEach(ses=>(ses.exercises||[]).forEach((ex,ei)=>{
+    if(exKey(ex)!==key)return;const k=ex.kind||"wr";let top=null,pr=false;
+    (ex.sets||[]).forEach((st,si)=>{const sc=setScore(k,st);if(sc&&better(sc,top))top=sc;if(prIndex().marks.has(ses.id+":"+ei+":"+si))pr=true});
+    out.push({ses,ex,ei,top,pr});
+  }));
+  return out;
+}
+function exerciseList(){
+  const seen=new Map();
+  [...sessions].sort((a,b)=>b.finishedAt-a.finishedAt).forEach(ses=>(ses.exercises||[]).forEach(ex=>{
+    if(!norm(ex.name))return;const key=exKey(ex);
+    if(!seen.has(key))seen.set(key,{key,name:ex.name.trim(),kind:ex.kind||"wr",count:0});seen.get(key).count++;
+  }));
+  return [...seen.values()];
+}
+
 /* ---------- views ---------- */
 const CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const DROP='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h5v5h5v5h6"/><path d="M17 12l3 3-3 3"/></svg>';
@@ -462,7 +561,9 @@ function exBlock(ex,ei,scope,live,total){
   const L=T(),k=ex.kind||"wr";
   const last=live?lastFor(ex.name,active&&active.startedAt):null;
   const hint=live?`<p class="hint" data-hint>${hintHtml(last)}</p>`:"";
-  if(k==="c") return cardioBlock(ex,ei,live,total,hint);
+  const pr=live?livePr(ex):{sets:new Set(),top:null};
+  const prLine=pr.top?`<p class="pr-line">🏆 ${esc(L.prLine(scoreText(k,pr.top)))}</p>`:"";
+  if(k==="c") return cardioBlock(ex,ei,live,total,hint+prLine);
   const head=`<div class="set head k-${k}"><span class="n">${L.colNo}</span>${k==="wr"?`<span>${L.kg}</span>`:""}<span>${k==="t"?L.sec:L.reps}</span>${k==="wr"?"<span></span>":""}${live?"<span></span>":""}<span></span></div>`;
   const rows=(ex.sets||[]).map((s,si)=>{
     const n=si+1;
@@ -475,13 +576,13 @@ function exBlock(ex,ei,scope,live,total){
       <input data-f="w" inputmode="decimal" enterkeyhint="next" value="${esc(d.w)}" placeholder="${L.kg}" aria-label="${esc(L.aDropW(di+1,n))}">
       <input data-f="r" inputmode="numeric" enterkeyhint="next" value="${esc(d.r)}" placeholder="${L.reps}" aria-label="${esc(L.aDropR(di+1,n))}">
       <span></span>${live?"<span></span>":""}<button class="x" data-act="del-drop" aria-label="${esc(L.aDropDel(di+1))}">×</button></div>`).join("");
-    return `<div class="setgrp" data-si="${si}"><div class="set main k-${k}${s.done?" is-done":""}"><span class="n">${n}</span>${w}${r}${dropBtn}${chk}<button class="x" data-act="del-set" aria-label="${esc(L.aSetDel(n))}">×</button></div>${drops}</div>`;
+    return `<div class="setgrp" data-si="${si}"><div class="set main k-${k}${s.done?" is-done":""}">${pr.sets.has(si)?`<span class="n pr" role="img" aria-label="${esc(L.aPrSet(n))}">🏆</span>`:`<span class="n">${n}</span>`}${w}${r}${dropBtn}${chk}<button class="x" data-act="del-set" aria-label="${esc(L.aSetDel(n))}">×</button></div>${drops}</div>`;
   }).join("");
   return `<section class="ex${live?"":" plan"}" data-ei="${ei}">
     <div class="ex-head"><span class="ex-num">${ei+1}</span>
       <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="${L.exName}" aria-label="${L.exName}">
       <select class="kind" data-f="kind" aria-label="${L.kindAria}">${Object.entries(L.kinds).map(([v,l])=>`<option value="${v}"${v===k?" selected":""}>${l}</option>`).join("")}</select>
-    </div>${hint}
+    </div>${hint}${prLine}
     <div class="sets">${head}${rows}</div>
     <div class="ex-actions"><button class="btn small" data-act="add-set">${L.addSet}</button>
       <span class="row"><button class="btn ghost small" data-act="move-ex" data-d="-1" ${ei===0?"disabled":""} aria-label="${L.moveUp}">↑</button><button class="btn ghost small" data-act="move-ex" data-d="1" ${ei===total-1?"disabled":""} aria-label="${L.moveDown}">↓</button><button class="btn ghost small" data-act="del-ex">${L.remove}</button></span>
@@ -594,6 +695,7 @@ function viewEditor(){
 
 function viewHistory(){
   const L=T();
+  if(ui.prog) return viewProgress(ui.prog);
   if(!sessions.length) return `<h1 style="margin-bottom:12px">${L.historyH}</h1><div class="empty"><strong>${L.histEmptyH}</strong><span>${L.histEmptyT}</span></div>`+viewBackup();
   const now=new Date();
   const thisMonth=sessions.filter(s=>{const d=new Date(s.finishedAt);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;
@@ -602,15 +704,16 @@ function viewHistory(){
   let html=`<h1 style="margin-bottom:12px">${L.historyH}</h1>
     <div class="stats"><div class="stat"><span class="num">${week}</span><span>${L.last7}</span></div><div class="stat"><span class="num">${thisMonth}</span><span>${L.thisMonth}</span></div><div class="stat"><span class="num">${sessions.length}</span><span>${L.total}</span></div></div>
     ${viewCalendar()}
+    ${viewProgList()}
     <div class="stack" style="margin-top:12px">`;
   let month="";
   sessions.forEach(s=>{
     const m=monthTitle(new Date(s.finishedAt));
     if(m!==month){month=m;html+=`<div class="month">${esc(m)}</div>`}
     const mins=Math.max(1,Math.round((s.finishedAt-s.startedAt)/60000));
-    const conf=ui.confirm==="ses:"+s.id;
-    html+=`<details class="card hist"><summary><div><h3>${esc(s.name||L.workout)}</h3><div class="meta">${esc(dLong(s.finishedAt))} · ${mins} ${L.min}</div></div><span class="chev">▶</span></summary>
-      <div class="detail">${(s.exercises||[]).map(e=>`<div class="dex"><span>${esc(e.name)}</span><span class="dsets">${esc(e.sets.map(x=>setText(e,x)).join(" · "))}</span></div>`).join("")}
+    const conf=ui.confirm==="ses:"+s.id,pi=prIndex(),nPr=pi.bySes[s.id]||0;
+    html+=`<details class="card hist"><summary><div><h3>${esc(s.name||L.workout)}</h3><div class="meta">${esc(dLong(s.finishedAt))} · ${mins} ${L.min}${nPr?` · <span class="pr-n">${esc(L.prN(nPr))}</span>`:""}</div></div><span class="chev">▶</span></summary>
+      <div class="detail">${(s.exercises||[]).map((e,ei)=>`<div class="dex"><button class="dex-name" data-act="prog" data-key="${esc(exKey(e))}">${esc(e.name)} <span aria-hidden="true">›</span></button><span class="dsets">${e.sets.map((x,si)=>esc(setText(e,x))+(pi.marks.has(s.id+":"+ei+":"+si)?" 🏆":"")).join(" · ")}</span></div>`).join("")}
       ${s.note?`<div class="meta">${esc(s.note)}</div>`:""}
       <div class="row">${conf
         ?`<span class="muted">${L.delSesQ}</span><button class="btn danger small" data-act="ses-del-yes" data-id="${esc(s.id)}">${L.del}</button><button class="btn ghost small" data-act="confirm-no">${L.no}</button>`
@@ -619,6 +722,50 @@ function viewHistory(){
   return html+"</div>"+viewBackup();
 }
 
+function viewProgList(){
+  const L=T(),list=exerciseList(),best=prIndex().best;if(!list.length) return "";
+  return `<div class="section prog-list"><h2>${L.progListH}</h2><p class="meta">${L.progListT}</p>
+    <div class="chips">${list.map(e=>`<button class="chip" data-act="prog" data-key="${esc(e.key)}"><span class="chip-name">${esc(e.name)}</span>${best[e.key]?`<span class="chip-best">${esc(scoreText(e.kind,best[e.key]))}</span>`:""}</button>`).join("")}</div></div>`;
+}
+function viewProgress(key){
+  const L=T(),hist=exHistory(key);
+  if(!hist.length){ui.prog=null;return viewHistory()}
+  const last=hist[hist.length-1],kind=last.ex.kind||"wr",name=last.ex.name;
+  const best=prIndex().best[key];
+  // what the chart plots
+  let metric=kind,val=h=>h.top?h.top[0]:null;
+  if(kind==="c"){const anyKm=hist.some(h=>h.top&&h.top[0]>0);metric=anyKm?"km":"min";val=h=>h.top?(anyKm?h.top[0]:h.top[1]):null}
+  const pts=hist.map(h=>({h,v:val(h)})).filter(p=>p.v>0);
+  const title=L.progChart[metric];
+  let chart="";
+  if(pts.length<2) chart=`<p class="meta">${L.progOne}</p>`;
+  else{
+    const W=340,H=190,pl=34,pr=14,pt=14,pb=26;
+    const t0=pts[0].h.ses.finishedAt,t1=pts[pts.length-1].h.ses.finishedAt,span=Math.max(1,t1-t0);
+    let lo=Math.min(...pts.map(p=>p.v)),hi=Math.max(...pts.map(p=>p.v));
+    if(lo===hi){lo=lo*0.9;hi=hi*1.1||1}
+    const pad=(hi-lo)*0.12;lo=Math.max(0,lo-pad);hi=hi+pad;
+    const step=niceStep((hi-lo)/4),g0=Math.ceil(lo/step)*step,ticks=[];for(let v=g0;v<=hi+1e-9;v+=step)ticks.push(+v.toFixed(6));
+    const x=t=>pl+(W-pl-pr)*(t-t0)/span,y=v=>pt+(H-pt-pb)*(1-(v-lo)/(hi-lo));
+    const grid=ticks.map(v=>`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" class="g"/><text x="${pl-6}" y="${y(v)+4}" class="yl">${esc(fmt(v))}</text>`).join("");
+    const line=pts.map((p,i)=>(i?"L":"M")+x(p.h.ses.finishedAt).toFixed(1)+" "+y(p.v).toFixed(1)).join(" ");
+    const dots=pts.map(p=>{const cx=x(p.h.ses.finishedAt).toFixed(1),cy=y(p.v).toFixed(1);
+      const tip=dLong(p.h.ses.finishedAt)+"|"+p.h.ex.sets.map((st,si)=>setText(p.h.ex,st)+(prIndex().marks.has(p.h.ses.id+":"+p.h.ei+":"+si)?" 🏆":"")).join(" · ");
+      return `<g class="pt${p.h.pr?" is-pr":""}" data-act="ptip" data-tip="${esc(tip)}"><circle cx="${cx}" cy="${cy}" r="16" class="hit"/><circle cx="${cx}" cy="${cy}" r="5" class="dot"/></g>`}).join("");
+    const xl=`<text x="${pl}" y="${H-6}" class="xl" text-anchor="start">${esc(dShort(t0))}</text><text x="${W-pr}" y="${H-6}" class="xl" text-anchor="end">${esc(dShort(t1))}</text>`;
+    chart=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(L.aChart(title,pts.length))}">${grid}<path d="${line}" class="ln"/>${dots}${xl}</svg>
+      ${hist.some(h=>h.pr)?`<div class="legend"><span class="lg-dot"></span>${L.progLegend}</div>`:""}`;
+  }
+  const log=[...hist].reverse().map(h=>`<div class="dex"><span>${esc(dLong(h.ses.finishedAt))}</span><span class="dsets">${h.ex.sets.map((st,si)=>esc(setText(h.ex,st))+(prIndex().marks.has(h.ses.id+":"+h.ei+":"+si)?" 🏆":"")).join(" · ")}</span></div>`).join("");
+  return `<button class="btn ghost small back" data-act="prog-close">${L.progBack}</button>
+    <h1 class="prog-h">${esc(name)}</h1>
+    <div class="stats prog-stats"><div class="stat"><span class="num">${best?esc(scoreText(kind,best)):"—"}</span><span>🏆 ${L.progBest}</span></div>
+      <div class="stat"><span class="num">${hist.length}</span><span>${L.progSessions}</span></div>
+      <div class="stat"><span class="num sm">${esc(dShort(last.ses.finishedAt))}</span><span>${L.progLast}</span></div></div>
+    <div class="section chart-box"><h2>${esc(title)}</h2>${chart}</div>
+    <div class="section prog-log"><h2>${L.progLog}</h2><div class="detail">${log}</div></div>`;
+}
+function niceStep(raw){const p=Math.pow(10,Math.floor(Math.log10(raw||1))),m=raw/p;return (m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10)*p}
 function viewCalendar(){
   const L=T(),y=cal.y,m=cal.m,first=new Date(y,m,1),off=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
   const counts={};sessions.forEach(s=>{const k=dayKey(s.finishedAt);counts[k]=(counts[k]||0)+1});
@@ -632,12 +779,19 @@ function viewCalendar(){
   }
   return `<div class="cal"><div class="cal-head"><button class="btn ghost small" data-act="cal" data-d="-1" aria-label="${L.prevMonth}">‹</button><h3>${esc(monthTitle(first))}</h3><button class="btn ghost small" data-act="cal" data-d="1" aria-label="${L.nextMonth}">›</button></div><div class="cal-grid">${cells}</div></div>`;
 }
+function showPointTip(el){
+  const [d,v]=el.dataset.tip.split("|");
+  $("#tip").innerHTML=`<div class="td">${esc(d)}</div><div>${esc(v)}</div>`;placeTip(el);
+}
 function showTip(el){
   const list=sessions.filter(s=>dayKey(s.finishedAt)===el.dataset.key).sort((a,b)=>a.finishedAt-b.finishedAt);
   if(!list.length)return;
   const tip=$("#tip");
   tip.innerHTML=`<div class="td">${esc(dLong(list[0].finishedAt))}</div>`+list.map(s=>`<div>${esc(s.name||T().workout)}</div>`).join("");
-  tip.hidden=false;
+  placeTip(el);
+}
+function placeTip(el){
+  const tip=$("#tip");tip.hidden=false;
   const r=el.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;
   let left=Math.min(Math.max(8,r.left+r.width/2-tw/2),window.innerWidth-tw-8);
   let top=r.top-th-8;if(top<8)top=r.bottom+8;
@@ -722,7 +876,7 @@ function seed(){
 
 document.addEventListener("click",e=>{
   const el=e.target.closest("[data-act]");
-  if(!el||el.dataset.act!=="day")hideTip();
+  if(!el||(el.dataset.act!=="day"&&el.dataset.act!=="ptip"))hideTip();
   if(!el)return;
   const L=T();
   const a=el.dataset.act,id=el.dataset.id;
@@ -731,7 +885,7 @@ document.addEventListener("click",e=>{
   const ex=obj&&ei>=0?obj.exercises[ei]:null;
   const siEl=el.closest("[data-si]"),si=siEl?+siEl.dataset.si:-1;
   switch(a){
-    case "tab": tab=el.dataset.tab;LS.set("podhod:tab",tab);ui.confirm=null;render();window.scrollTo(0,0);return;
+    case "tab": ui.prog=null;tab=el.dataset.tab;LS.set("podhod:tab",tab);ui.confirm=null;render();window.scrollTo(0,0);return;
     case "start-empty": return startWorkout(L.workout,null,null);
     case "start-cardio": return startWorkout(L.cardioW,[{name:L.cardioName,kind:"c",sets:[{w:"",r:""}]}],null);
     case "add-cardio":{obj.exercises.push({name:"",kind:"c",sets:[{w:"",r:"",done:false}]});touched(el);render();const ins=document.querySelectorAll(".ex-name");ins[ins.length-1]&&ins[ins.length-1].focus();return}
@@ -747,7 +901,7 @@ document.addEventListener("click",e=>{
     case "del-set": ex.sets.splice(si,1);touched(el);render();return;
     case "toggle-set":{
       const s=ex.sets[si];
-      if(!s.done){s.done=true;active.restFrom=Date.now()}
+      if(!s.done){s.done=true;active.restFrom=Date.now();if(livePr(ex).sets.has(si))setTimeout(()=>toast(T().newPr),0)}
       else s.done=false;
       saveActiveSoon();render();return}
     case "finish-open": ui.finishing=true;ui.keepTpl=false;ui.newTpl=false;ui.newTplName=active.name;render();return;
@@ -773,6 +927,9 @@ document.addEventListener("click",e=>{
     case "day": showTip(el);return;
     case "backup-export": exportData();return;
     case "export-csv": exportCsv();return;
+    case "prog": ui.prog=el.dataset.key;render();window.scrollTo(0,0);return;
+    case "prog-close": ui.prog=null;render();window.scrollTo(0,0);return;
+    case "ptip": showPointTip(el);return;
     case "backup-import": $("#import-file").click();return;
     case "hide-install": LS.set("podhod:hideInstall",true);render();return;
     case "cal":{cal.m+=+el.dataset.d;if(cal.m<0){cal.m=11;cal.y--}if(cal.m>11){cal.m=0;cal.y++}render();return}
