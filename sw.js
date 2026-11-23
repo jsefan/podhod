@@ -1,6 +1,6 @@
 // Offline support: serve from cache first, refresh the cache in the background.
 // Bump VERSION when releasing changes so old caches are cleared.
-const VERSION = "podhod-v13";
+const VERSION = "podhod-v15";
 const SHELL = [
   "./",
   "index.html",
