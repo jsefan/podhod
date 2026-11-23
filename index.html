@@ -696,7 +696,7 @@ function viewEditor(){
 function viewHistory(){
   const L=T();
   if(ui.prog) return viewProgress(ui.prog);
-  if(!sessions.length) return `<h1 style="margin-bottom:12px">${L.historyH}</h1><div class="empty"><strong>${L.histEmptyH}</strong><span>${L.histEmptyT}</span></div>`+viewBackup();
+  if(!sessions.length) return `<h1 style="margin-bottom:12px">${L.historyH}</h1>${viewCalendar()}<div class="empty" style="margin-top:12px"><strong>${L.histEmptyH}</strong><span>${L.histEmptyT}</span></div>`+viewBackup();
   const now=new Date();
   const thisMonth=sessions.filter(s=>{const d=new Date(s.finishedAt);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;
   const weekAgo=Date.now()-7*864e5;
