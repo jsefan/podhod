@@ -171,6 +171,13 @@ details.hist[open] summary .chev{transform:rotate(90deg)}
 .day.has-w.today{background:var(--pink);color:var(--pink-ink);box-shadow:none}
 .day .cnt{position:absolute;top:3px;right:8px;font-size:11px;line-height:1}
 .day.out{visibility:hidden}
+.plan-w{display:flex;align-items:baseline;gap:6px;flex:0 0 auto}
+.plan-w span{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.plan{width:84px;min-height:32px;border:0;border-bottom:1.5px dashed #444;background:transparent;color:var(--ink);font-family:var(--display);font-style:italic;font-weight:700;font-size:17px;padding:2px 2px;border-radius:0}
+.plan::placeholder{color:var(--muted);font-family:var(--body);font-style:normal;font-weight:500;font-size:12px}
+.plan:focus{outline:none;border-bottom:1.5px solid var(--accent)}
+.dex-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.dplan{font-size:12px;color:var(--muted);white-space:nowrap}
 .pr-line{margin:0;font-size:13px;font-weight:700;color:var(--pink)}
 .set .n.pr{font-style:normal;font-size:17px}
 .pr-n{color:var(--accent);font-weight:700}
@@ -216,7 +223,7 @@ nav.tabs .dot{width:6px;height:6px;border-radius:50%;background:var(--pink)}
 .backup .meta{font-size:13px;color:var(--muted)}
 .top-r{display:flex;gap:10px;align-items:center;position:relative;z-index:1}
 .lang{-webkit-appearance:none;appearance:none;border:0;border-radius:0;min-height:32px;padding:0 26px 0 14px;background-color:var(--accent);background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M0 0h10L5 6z%27 fill=%27%23141414%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;color:var(--accent-ink);font-family:var(--display);font-style:italic;font-weight:800;font-size:16px;letter-spacing:.04em;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
-@media (max-width:480px){.ex-head{flex-wrap:wrap}.ex-name{flex:1 1 calc(100% - 40px)}.kind{margin-left:30px}.title-input{font-size:32px}nav.tabs button{font-size:15px;letter-spacing:0;padding:0 14px}.add-row>.btn{font-size:16px}}
+@media (max-width:480px){.ex-head{flex-wrap:wrap}.ex-name{flex:1 1 calc(100% - 40px)}.kind{margin-left:30px}.title-input{font-size:32px}nav.tabs button{font-size:14px;letter-spacing:0;padding:0 16px}.add-row>.btn{font-size:16px}}
 </style>
 </head>
 <body>
@@ -253,7 +260,7 @@ en:{
   installB:"Install the app:", installT:"in Safari tap Share, then “Add to Home Screen”. Workouts logged in the browser won’t carry over to the installed app.", gotIt:"Got it",
   saveErr:"Couldn’t save: browser storage is full",
   backupH:"Backup", backupMeta:"Your workouts are stored only on this phone. Save a copy to Files or iCloud Drive so nothing is lost when you change phones.",
-  lastBackup:d=>` Last backup: ${d}.`, noBackup:" No backups yet.", csvBtn:"Export log (CSV)",
+  lastBackup:d=>` Last backup: ${d}.`, noBackup:" No backups yet.", csvBtn:"Export log (CSV)", planPh:"Plan, e.g. 4×15", planAria:"Plan: sets × reps", planLbl:"plan",
   newPr:"🏆 New record!", prLine:v=>`New record: ${v}`, prN:n=>`🏆 ${n}`, aPrSet:n=>`Set ${n}, new record`,
   progListH:"Progress", progListT:"Tap an exercise to see its chart and records.", progBack:"‹ History",
   progBest:"Record", progSessions:"Workouts", progLast:"Last time",
@@ -302,7 +309,7 @@ ru:{
   installB:"Установите приложение:", installT:"в Safari нажмите «Поделиться», затем «На экран „Домой“». Тренировки, записанные в браузере, в установленное приложение не перенесутся.", gotIt:"Понятно",
   saveErr:"Не удалось сохранить: память браузера заполнена",
   backupH:"Резервная копия", backupMeta:"Тренировки хранятся только на этом телефоне. Сохраняйте копию в «Файлы» или iCloud Drive, чтобы ничего не потерять при смене телефона.",
-  lastBackup:d=>` Последняя копия: ${d}.`, noBackup:" Копий ещё не было.", csvBtn:"Выгрузить журнал (CSV)",
+  lastBackup:d=>` Последняя копия: ${d}.`, noBackup:" Копий ещё не было.", csvBtn:"Выгрузить журнал (CSV)", planPh:"План, напр. 4×15", planAria:"План: подходы × повторения", planLbl:"план",
   newPr:"🏆 Новый рекорд!", prLine:v=>`Новый рекорд: ${v}`, prN:n=>`🏆 ${n}`, aPrSet:n=>`Подход ${n}, новый рекорд`,
   progListH:"Прогресс", progListT:"Нажмите на упражнение, чтобы увидеть график и рекорды.", progBack:"‹ История",
   progBest:"Рекорд", progSessions:"Тренировок", progLast:"Последний раз",
@@ -409,18 +416,18 @@ function sessionsCsv(){
   const q=v=>{v=v==null?"":String(v);return /[",\r\n]/.test(v)?"\""+v.replace(/"/g,"\"\"")+"\"":v};
   const n=v=>{v=String(v==null?"":v).trim().replace(",",".");return v===""?"":v};
   const p2=x=>String(x).padStart(2,"0");
-  const rows=[["date","time","duration_min","workout","exercise","type","set","drop","weight_kg","reps","seconds","minutes","distance_km"]];
+  const rows=[["date","time","duration_min","workout","exercise","type","set","drop","weight_kg","reps","seconds","minutes","distance_km","plan"]];
   [...sessions].sort((a,b)=>a.finishedAt-b.finishedAt).forEach(ses=>{
     const st=new Date(ses.startedAt||ses.finishedAt),date=st.getFullYear()+"-"+p2(st.getMonth()+1)+"-"+p2(st.getDate()),time=ses.startedAt?p2(st.getHours())+":"+p2(st.getMinutes()):"";
     const dur=ses.startedAt?Math.round((ses.finishedAt-ses.startedAt)/60000):"";
     (ses.exercises||[]).forEach(ex=>{const k=ex.kind||"wr";
       (ex.sets||[]).forEach((st2,i)=>{
-        const base=[date,time,dur,ses.name||"",ex.name||"",KIND[k]||k,i+1];
-        if(k==="c")rows.push([...base,"","","","",n(st2.r),n(st2.w)]);
-        else if(k==="t")rows.push([...base,"","","",n(st2.r),"",""]);
-        else if(k==="r")rows.push([...base,"","",n(st2.r),"","",""]);
-        else{rows.push([...base,"",n(st2.w),n(st2.r),"","",""]);
-          (st2.drops||[]).forEach((d,j)=>rows.push([...base,j+1,n(d.w),n(d.r),"","",""]))}
+        const base=[date,time,dur,ses.name||"",ex.name||"",KIND[k]||k,i+1],pl=ex.plan||"";
+        if(k==="c")rows.push([...base,"","","","",n(st2.r),n(st2.w),pl]);
+        else if(k==="t")rows.push([...base,"","","",n(st2.r),"","",pl]);
+        else if(k==="r")rows.push([...base,"","",n(st2.r),"","","",pl]);
+        else{rows.push([...base,"",n(st2.w),n(st2.r),"","","",pl]);
+          (st2.drops||[]).forEach((d,j)=>rows.push([...base,j+1,n(d.w),n(d.r),"","","",pl]))}
       })})
   });
   return "﻿"+rows.map(r=>r.map(q).join(",")).join("\r\n")+"\r\n";
@@ -583,6 +590,7 @@ function exBlock(ex,ei,scope,live,total){
     <div class="ex-head"><span class="ex-num">${ei+1}</span>
       <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="${L.exName}" aria-label="${L.exName}">
       <select class="kind" data-f="kind" aria-label="${L.kindAria}">${Object.entries(L.kinds).map(([v,l])=>`<option value="${v}"${v===k?" selected":""}>${l}</option>`).join("")}</select>
+      <label class="plan-w"><span aria-hidden="true">${L.planLbl}</span><input class="plan" data-f="plan" value="${esc(ex.plan||"")}" placeholder="4×15" aria-label="${L.planAria}" autocomplete="off"></label>
     </div>${hint}${prLine}
     <div class="sets">${head}${rows}</div>
     <div class="ex-actions"><button class="btn small" data-act="add-set">${L.addSet}</button>
@@ -596,6 +604,7 @@ function cardioBlock(ex,ei,live,total,hint){
     <div class="ex-head"><span class="ex-num">${ei+1}</span>
       <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="${L.exName}" aria-label="${L.exName}">
       <select class="kind" data-f="kind" aria-label="${L.kindAria}">${Object.entries(L.kinds).map(([v,l])=>`<option value="${v}"${v==="c"?" selected":""}>${l}</option>`).join("")}</select>
+      <label class="plan-w"><span aria-hidden="true">${L.planLbl}</span><input class="plan" data-f="plan" value="${esc(ex.plan||"")}" placeholder="4×15" aria-label="${L.planAria}" autocomplete="off"></label>
     </div>${hint}
     <div class="sets"><div class="set head k-c"><span>${L.min}</span><span>${L.km}</span>${live?"<span></span>":""}</div>
       <div class="setgrp" data-si="0"><div class="set main k-c${s.done?" is-done":""}">
@@ -714,7 +723,7 @@ function viewHistory(){
     const mins=s.startedAt?Math.max(1,Math.round((s.finishedAt-s.startedAt)/60000)):0;
     const conf=ui.confirm==="ses:"+s.id,pi=prIndex(),nPr=pi.bySes[s.id]||0;
     html+=`<details class="card hist"><summary><div><h3>${esc(s.name||L.workout)}</h3><div class="meta">${esc(dLong(s.finishedAt))}${mins?` · ${mins} ${L.min}`:""}${nPr?` · <span class="pr-n">${esc(L.prN(nPr))}</span>`:""}</div></div><span class="chev">▶</span></summary>
-      <div class="detail">${(s.exercises||[]).map((e,ei)=>`<div class="dex"><button class="dex-name" data-act="prog" data-key="${esc(exKey(e))}">${esc(e.name)} <span aria-hidden="true">›</span></button><span class="dsets">${e.sets.map((x,si)=>esc(setText(e,x))+(pi.marks.has(s.id+":"+ei+":"+si)?" 🏆":"")).join(" · ")}</span></div>`).join("")}
+      <div class="detail">${(s.exercises||[]).map((e,ei)=>`<div class="dex"><span class="dex-top"><button class="dex-name" data-act="prog" data-key="${esc(exKey(e))}">${esc(e.name)} <span aria-hidden="true">›</span></button>${e.plan?`<span class="dplan">${esc(L.planLbl)} ${esc(e.plan)}</span>`:""}</span><span class="dsets">${e.sets.map((x,si)=>esc(setText(e,x))+(pi.marks.has(s.id+":"+ei+":"+si)?" 🏆":"")).join(" · ")}</span></div>`).join("")}
       ${s.note?`<div class="meta">${esc(s.note)}</div>`:""}
       <div class="row">${conf
         ?`<span class="muted">${L.delSesQ}</span><button class="btn danger small" data-act="ses-del-yes" data-id="${esc(s.id)}">${L.del}</button><button class="btn ghost small" data-act="confirm-no">${L.no}</button>`
@@ -846,7 +855,7 @@ const scopeObj=el=>{const s=el.closest("[data-scope]");if(!s)return null;return 
 const touched=el=>{const s=el.closest("[data-scope]");if(s&&s.dataset.scope==="active")saveActiveSoon()};
 const cleanDrops=s=>(s.drops||[]).filter(d=>String(d.w==null?"":d.w).trim()!==""||String(d.r==null?"":d.r).trim()!=="").map(d=>({w:d.w==null?"":d.w,r:d.r==null?"":d.r}));
 const withDrops=(o,s)=>{const d=cleanDrops(s);if(d.length)o.drops=d;return o};
-const planFrom=exs=>exs.map(e=>({name:e.name,kind:e.kind||"wr",sets:(e.sets||[]).map(s=>withDrops({w:s.w==null?"":s.w,r:s.r==null?"":s.r},s))}));
+const planFrom=exs=>exs.map(e=>({name:e.name,kind:e.kind||"wr",plan:e.plan||"",sets:(e.sets||[]).map(s=>withDrops({w:s.w==null?"":s.w,r:s.r==null?"":s.r},s))}));
 let wake=null;
 async function keepAwake(){try{if(active&&navigator.wakeLock&&document.visibilityState==="visible")wake=await navigator.wakeLock.request("screen")}catch(e){}}
 document.addEventListener("visibilitychange",keepAwake);
@@ -854,14 +863,14 @@ document.addEventListener("visibilitychange",keepAwake);
 function startWorkout(name,exs,templateId){
   if(active){tab="workout";render();toast(T().finishFirst);return}
   active={id:uid(),name:name||T().workout,templateId:templateId||null,startedAt:Date.now(),restFrom:null,
-    exercises:(exs&&exs.length?exs:[{name:"",kind:"wr",sets:[{w:"",r:""}]}]).map(e=>({name:e.name,kind:e.kind||"wr",sets:(e.sets&&e.sets.length?e.sets:[{w:"",r:""}]).map(s=>({w:s.w==null?"":s.w,r:s.r==null?"":s.r,done:false,drops:cleanDrops(s)}))}))};
+    exercises:(exs&&exs.length?exs:[{name:"",kind:"wr",sets:[{w:"",r:""}]}]).map(e=>({name:e.name,kind:e.kind||"wr",plan:e.plan||"",sets:(e.sets&&e.sets.length?e.sets:[{w:"",r:""}]).map(s=>({w:s.w==null?"":s.w,r:s.r==null?"":s.r,done:false,drops:cleanDrops(s)}))}))};
   ui.finishing=false;ui.confirm=null;tab="workout";LS.set("podhod:tab",tab);flushActive();render();window.scrollTo(0,0);keepAwake();
 }
 
 async function finishSave(){
   const L=T();
   const anyDone=active.exercises.some(e=>e.sets.some(s=>s.done));
-  const exs=active.exercises.map(e=>({name:(e.name||"").trim()||L.exercise,kind:e.kind||"wr",
+  const exs=active.exercises.map(e=>({name:(e.name||"").trim()||L.exercise,kind:e.kind||"wr",plan:(e.plan||"").trim(),
       sets:e.sets.filter(s=>anyDone?s.done:(String(s.w).trim()!==""||String(s.r).trim()!=="")).map(s=>e.kind==="wr"||!e.kind?withDrops({w:s.w,r:s.r},s):{w:s.w,r:s.r})}))
     .filter(e=>e.sets.length);
   if(!exs.length){toast(L.fillOne);return}
@@ -959,6 +968,7 @@ document.addEventListener("input",e=>{
   else{
     const ex=obj.exercises[+el.closest("[data-ei]").dataset.ei];
     if(f==="name")ex.name=el.value;
+    else if(f==="plan")ex.plan=el.value;
     else if(f==="kind"){ex.kind=el.value;
       if(ex.kind==="c"){const s0=ex.sets[0]||{w:"",r:""};ex.sets=[{w:s0.w,r:s0.r,done:!!s0.done}]}
       else if(!ex.sets.length)ex.sets.push({w:"",r:"",done:false});
@@ -970,6 +980,7 @@ document.addEventListener("input",e=>{
 document.addEventListener("change",e=>{
   const el=e.target;if(el.dataset.f!=="name")return;
   const obj=scopeObj(el),exEl=el.closest("[data-ei]"),ex=obj&&exEl&&obj.exercises[+exEl.dataset.ei];
+  if(ex&&!(ex.plan||"").trim()){const lp=lastFor(el.value);if(lp&&lp.ex.plan){ex.plan=lp.ex.plan;const pi=exEl.querySelector("[data-f='plan']");if(pi)pi.value=ex.plan;touched(el)}}
   if(ex&&ex.kind!=="c"&&T().cardio.some(n=>norm(n)===norm(el.value))&&ex.sets.every(s=>String(s.w).trim()===""&&String(s.r).trim()==="")){
     ex.kind="c";ex.sets=[{w:"",r:"",done:false}];touched(el);render();return}
   const s=el.closest("[data-scope='active']");if(!s)return;
