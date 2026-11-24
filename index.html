@@ -411,7 +411,7 @@ function sessionsCsv(){
   const p2=x=>String(x).padStart(2,"0");
   const rows=[["date","time","duration_min","workout","exercise","type","set","drop","weight_kg","reps","seconds","minutes","distance_km"]];
   [...sessions].sort((a,b)=>a.finishedAt-b.finishedAt).forEach(ses=>{
-    const st=new Date(ses.startedAt||ses.finishedAt),date=st.getFullYear()+"-"+p2(st.getMonth()+1)+"-"+p2(st.getDate()),time=p2(st.getHours())+":"+p2(st.getMinutes());
+    const st=new Date(ses.startedAt||ses.finishedAt),date=st.getFullYear()+"-"+p2(st.getMonth()+1)+"-"+p2(st.getDate()),time=ses.startedAt?p2(st.getHours())+":"+p2(st.getMinutes()):"";
     const dur=ses.startedAt?Math.round((ses.finishedAt-ses.startedAt)/60000):"";
     (ses.exercises||[]).forEach(ex=>{const k=ex.kind||"wr";
       (ex.sets||[]).forEach((st2,i)=>{
@@ -711,9 +711,9 @@ function viewHistory(){
   sessions.forEach(s=>{
     const m=monthTitle(new Date(s.finishedAt));
     if(m!==month){month=m;html+=`<div class="month">${esc(m)}</div>`}
-    const mins=Math.max(1,Math.round((s.finishedAt-s.startedAt)/60000));
+    const mins=s.startedAt?Math.max(1,Math.round((s.finishedAt-s.startedAt)/60000)):0;
     const conf=ui.confirm==="ses:"+s.id,pi=prIndex(),nPr=pi.bySes[s.id]||0;
-    html+=`<details class="card hist"><summary><div><h3>${esc(s.name||L.workout)}</h3><div class="meta">${esc(dLong(s.finishedAt))} · ${mins} ${L.min}${nPr?` · <span class="pr-n">${esc(L.prN(nPr))}</span>`:""}</div></div><span class="chev">▶</span></summary>
+    html+=`<details class="card hist"><summary><div><h3>${esc(s.name||L.workout)}</h3><div class="meta">${esc(dLong(s.finishedAt))}${mins?` · ${mins} ${L.min}`:""}${nPr?` · <span class="pr-n">${esc(L.prN(nPr))}</span>`:""}</div></div><span class="chev">▶</span></summary>
       <div class="detail">${(s.exercises||[]).map((e,ei)=>`<div class="dex"><button class="dex-name" data-act="prog" data-key="${esc(exKey(e))}">${esc(e.name)} <span aria-hidden="true">›</span></button><span class="dsets">${e.sets.map((x,si)=>esc(setText(e,x))+(pi.marks.has(s.id+":"+ei+":"+si)?" 🏆":"")).join(" · ")}</span></div>`).join("")}
       ${s.note?`<div class="meta">${esc(s.note)}</div>`:""}
       <div class="row">${conf
