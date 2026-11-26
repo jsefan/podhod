@@ -1278,7 +1278,14 @@ render();
   try{active=await store.getActive()}catch(e){active=null}
   ready.active=true;render();if(active)keepAwake();
 })();
-if("serviceWorker" in navigator&&location.protocol!=="file:"){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+if("serviceWorker" in navigator&&location.protocol!=="file:"){
+  // A new version takes over as soon as it is installed: save the running workout and reload once.
+  const hadController=!!navigator.serviceWorker.controller;let reloading=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!hadController||reloading)return;reloading=true;flushActive();setTimeout(()=>location.reload(),150)});
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(reg=>{
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")reg.update().catch(()=>{})});
+  }).catch(()=>{}));
+}
 })();
 </script>
 </body>
