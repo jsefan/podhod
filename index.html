@@ -837,9 +837,8 @@ function cardioBlock(ex,ei,live,total,hint){
     <div class="ex-head"><span class="ex-num">${ei+1}</span>
       <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="${L.exName}" aria-label="${L.exName}">
       <select class="kind" data-f="kind" aria-label="${L.kindAria}">${Object.entries(L.kinds).map(([v,l])=>`<option value="${v}"${v==="c"?" selected":""}>${l}</option>`).join("")}</select>
-      <label class="plan-w"><span aria-hidden="true">${L.planLbl}</span><input class="plan" data-f="plan" value="${esc(ex.plan||"")}" placeholder="4×15" aria-label="${L.planAria}" autocomplete="off"></label>
     </div>${noteInp(ex)}${hint}
-    <div class="sets"><div class="set head k-c"><span>${L.min}</span>${live?"<span></span>":""}</div>
+    <div class="sets">
       <div class="setgrp" data-si="0"><div class="set main k-c${s.done?" is-done":""}">
         <input data-f="r" inputmode="decimal" enterkeyhint="done" value="${esc(s.r)}" placeholder="${L.min}" aria-label="${esc(L.aMin)}">${chk}</div></div></div>
     <div class="ex-actions"><span></span>${exTools(ex,ei,total)}
