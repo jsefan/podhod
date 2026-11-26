@@ -109,6 +109,8 @@ button{cursor:pointer}
 .ex-name::placeholder{color:var(--muted);text-transform:none;font-weight:600}
 .ex-name:focus{border-bottom-color:var(--accent);outline:none}
 .kind{-webkit-appearance:none;appearance:none;border:0;border-radius:0;background-color:var(--accent);background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M0 0h10L5 6z%27 fill=%27%23141414%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;color:var(--accent-ink);font-size:15px;font-weight:600;line-height:1.2;padding:7px 28px 7px 14px;max-width:150px;margin-right:14px;clip-path:var(--cut)}
+.kind-tag{display:inline-flex;align-items:center;background-image:none;padding:7px 14px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;max-width:none;white-space:nowrap}
+.kind-tag.kc{background-color:var(--pink);color:var(--pink-ink)}
 .hint{font-size:13px;color:var(--muted);margin:0}
 .hint b{font-weight:600;color:var(--ink)}
 .sets{display:flex;flex-direction:column;gap:6px}
@@ -823,7 +825,7 @@ function exBlock(ex,ei,scope,live,total){
   return `<section class="ex${live?"":" plan"}" data-ei="${ei}">
     <div class="ex-head"><span class="ex-num">${ei+1}</span>
       <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="${L.exName}" aria-label="${L.exName}">
-      <select class="kind" data-f="kind" aria-label="${L.kindAria}">${Object.entries(L.kinds).map(([v,l])=>`<option value="${v}"${v===k?" selected":""}>${l}</option>`).join("")}</select>
+      <span class="kind kind-tag">${esc(L.kinds[k])}</span>
       <label class="plan-w"><span aria-hidden="true">${L.planLbl}</span><input class="plan" data-f="plan" value="${esc(ex.plan||"")}" placeholder="4×15" aria-label="${L.planAria}" autocomplete="off"></label>
     </div>${noteInp(ex)}${hint}${prLine}
     <div class="sets">${head}${rows}</div>
@@ -836,7 +838,7 @@ function cardioBlock(ex,ei,live,total,hint){
   return `<section class="ex${live?"":" plan"}" data-ei="${ei}">
     <div class="ex-head"><span class="ex-num">${ei+1}</span>
       <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="${L.exName}" aria-label="${L.exName}">
-      <select class="kind" data-f="kind" aria-label="${L.kindAria}">${Object.entries(L.kinds).map(([v,l])=>`<option value="${v}"${v==="c"?" selected":""}>${l}</option>`).join("")}</select>
+      <span class="kind kind-tag kc">${esc(L.kinds.c)}</span>
     </div>${noteInp(ex)}${hint}
     <div class="sets">
       <div class="setgrp" data-si="0"><div class="set main k-c${s.done?" is-done":""}">

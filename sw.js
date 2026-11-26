@@ -1,7 +1,7 @@
 // Offline support. The page itself: network first (so updates show up on the next open),
 // falling back to the cached copy when offline or after 3 s. Other files: cache first, refreshed in the background.
 // Bump VERSION when releasing changes so old caches are cleared.
-const VERSION = "podhod-v25";
+const VERSION = "podhod-v26";
 const SHELL = [
   "./",
   "index.html",
