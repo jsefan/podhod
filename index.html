@@ -828,7 +828,7 @@ function exBlock(ex,ei,scope,live,total){
       <span class="kind kind-tag">${esc(L.kinds[k])}</span>
       <label class="plan-w"><span aria-hidden="true">${L.planLbl}</span><input class="plan" data-f="plan" value="${esc(ex.plan||"")}" placeholder="4×15" aria-label="${L.planAria}" autocomplete="off"></label>
     </div>${noteInp(ex)}${hint}${prLine}
-    <div class="sets">${head}${rows}</div>
+    <div class="sets">${rows}</div>
     <div class="ex-actions"><button class="btn small" data-act="add-set">${L.addSet}</button>${exTools(ex,ei,total)}
     </div></section>`;
 }
