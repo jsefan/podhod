@@ -116,8 +116,8 @@ button{cursor:pointer}
 .set.k-r,.set.k-t{grid-template-columns:24px 1fr 48px 28px}
 .plan .set{grid-template-columns:24px 1fr 1fr 40px 28px}
 .plan .set.k-r,.plan .set.k-t{grid-template-columns:24px 1fr 28px}
-.set.k-c{grid-template-columns:1fr 1fr 48px}
-.plan .set.k-c{grid-template-columns:1fr 1fr}
+.set.k-c{grid-template-columns:1fr 48px}
+.plan .set.k-c{grid-template-columns:1fr}
 .add-row>.btn{flex:1;white-space:nowrap;padding-left:8px;padding-right:8px}
 .setgrp{display:flex;flex-direction:column;gap:4px}
 .set.drop input{min-height:40px;font-size:20px;box-shadow:inset 0 -3px 0 var(--pink)}
@@ -568,7 +568,6 @@ function lastFor(name,beforeTs){
 function cardioText(s){
   const L=T(),p=[];
   if(num(s.r))p.push(fmt(s.r)+" "+L.min);
-  if(num(s.w))p.push(fmt(s.w)+" "+L.km);
   return p.join(" · ");
 }
 function setText(ex,s){
@@ -599,14 +598,14 @@ const exKey=ex=>norm(ex.name)+"|"+(ex.kind||"wr");
 // Comparable score of a set: [primary, secondary], or null when the set can't count
 function setScore(kind,st){
   const w=num(st.w),r=num(st.r);
-  if(kind==="c") return w>0||r>0?[w,r]:null;       // cardio: distance first, then minutes
+  if(kind==="c") return r>0?[r,0]:null;           // cardio: minutes
   if(kind==="r"||kind==="t") return r>0?[r,0]:null; // reps / seconds
   return w>0&&r>0?[w,r]:null;                       // weight first, then reps at that weight
 }
 const better=(a,b)=>!b||a[0]>b[0]||(a[0]===b[0]&&a[1]>b[1]);
 function scoreText(kind,sc){
   const L=T();
-  if(kind==="c") return sc[0]>0?fmt(sc[0])+" "+L.km:fmt(sc[1])+" "+L.min;
+  if(kind==="c") return fmt(sc[0])+" "+L.min;
   if(kind==="t") return fmt(sc[0])+" "+L.secShort;
   if(kind==="r") return fmt(sc[0])+" "+L.reps;
   return fmt(sc[0])+" "+L.kg+" × "+fmt(sc[1]);
@@ -840,10 +839,9 @@ function cardioBlock(ex,ei,live,total,hint){
       <select class="kind" data-f="kind" aria-label="${L.kindAria}">${Object.entries(L.kinds).map(([v,l])=>`<option value="${v}"${v==="c"?" selected":""}>${l}</option>`).join("")}</select>
       <label class="plan-w"><span aria-hidden="true">${L.planLbl}</span><input class="plan" data-f="plan" value="${esc(ex.plan||"")}" placeholder="4×15" aria-label="${L.planAria}" autocomplete="off"></label>
     </div>${noteInp(ex)}${hint}
-    <div class="sets"><div class="set head k-c"><span>${L.min}</span><span>${L.km}</span>${live?"<span></span>":""}</div>
+    <div class="sets"><div class="set head k-c"><span>${L.min}</span>${live?"<span></span>":""}</div>
       <div class="setgrp" data-si="0"><div class="set main k-c${s.done?" is-done":""}">
-        <input data-f="r" inputmode="decimal" enterkeyhint="next" value="${esc(s.r)}" placeholder="${L.min}" aria-label="${esc(L.aMin)}">
-        <input data-f="w" inputmode="decimal" enterkeyhint="done" value="${esc(s.w)}" placeholder="${L.km}" aria-label="${esc(L.aKm)}">${chk}</div></div></div>
+        <input data-f="r" inputmode="decimal" enterkeyhint="done" value="${esc(s.r)}" placeholder="${L.min}" aria-label="${esc(L.aMin)}">${chk}</div></div></div>
     <div class="ex-actions"><span></span>${exTools(ex,ei,total)}
     </div></section>`;
 }
@@ -991,7 +989,7 @@ function viewProgress(key,inline){
   const best=prIndex().best[key];
   // what the chart plots
   let metric=kind,val=h=>h.top?h.top[0]:null;
-  if(kind==="c"){const anyKm=hist.some(h=>h.top&&h.top[0]>0);metric=anyKm?"km":"min";val=h=>h.top?(anyKm?h.top[0]:h.top[1]):null}
+  if(kind==="c")metric="min";
   const pts=hist.map(h=>({h,v:val(h)})).filter(p=>p.v>0);
   const title=L.progChart[metric];
   let chart="";
