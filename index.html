@@ -308,7 +308,7 @@ nav.tabs .dot{width:6px;height:6px;border-radius:50%;background:var(--pink)}
 .backup .meta{font-size:13px;color:var(--muted)}
 .top-r{display:flex;gap:10px;align-items:center;position:relative;z-index:1}
 .lang{-webkit-appearance:none;appearance:none;border:0;border-radius:0;min-height:32px;padding:0 26px 0 14px;background-color:var(--accent);background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2710%27 height=%276%27%3E%3Cpath d=%27M0 0h10L5 6z%27 fill=%27%23141414%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;color:var(--accent-ink);font-family:var(--display);font-style:italic;font-weight:800;font-size:16px;letter-spacing:.04em;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%)}
-@media (max-width:480px){.ex-head{flex-wrap:wrap}.ex-name{flex:1 1 calc(100% - 40px)}.kind{margin-left:30px}.title-input{font-size:32px}nav.tabs button{font-size:12px;letter-spacing:0;padding:0 2px;clip-path:none}nav.tabs button[aria-current="true"]{clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)}.add-row>.btn{font-size:16px}}
+@media (max-width:480px){.ex-head{flex-wrap:wrap}.ex-name{flex:1 1 calc(100% - 40px)}.kind,.plan-w{margin-left:30px}.title-input{font-size:32px}nav.tabs button{font-size:12px;letter-spacing:0;padding:0 2px;clip-path:none}nav.tabs button[aria-current="true"]{clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)}.add-row>.btn{font-size:16px}}
 </style>
 </head>
 <body>
@@ -825,8 +825,7 @@ function exBlock(ex,ei,scope,live,total){
   return `<section class="ex${live?"":" plan"}" data-ei="${ei}">
     <div class="ex-head"><span class="ex-num">${ei+1}</span>
       <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="${L.exName}" aria-label="${L.exName}">
-      <span class="kind kind-tag">${esc(L.kinds[k])}</span>
-      <label class="plan-w"><span aria-hidden="true">${L.planLbl}</span><input class="plan" data-f="plan" value="${esc(ex.plan||"")}" placeholder="4×15" aria-label="${L.planAria}" autocomplete="off"></label>
+      <label class="plan-w"><span aria-hidden="true">${L.planLbl}</span><input class="plan" data-f="plan" value="${esc(ex.plan||"")}" placeholder="" aria-label="${L.planAria}" autocomplete="off"></label>
     </div>${noteInp(ex)}${hint}${prLine}
     <div class="sets">${rows}</div>
     <div class="ex-actions"><button class="btn small" data-act="add-set">${L.addSet}</button>${exTools(ex,ei,total)}
@@ -838,7 +837,6 @@ function cardioBlock(ex,ei,live,total,hint){
   return `<section class="ex${live?"":" plan"}" data-ei="${ei}">
     <div class="ex-head"><span class="ex-num">${ei+1}</span>
       <input class="ex-name" data-f="name" list="exlist" value="${esc(ex.name)}" placeholder="${L.exName}" aria-label="${L.exName}">
-      <span class="kind kind-tag kc">${esc(L.kinds.c)}</span>
     </div>${noteInp(ex)}${hint}
     <div class="sets">
       <div class="setgrp" data-si="0"><div class="set main k-c${s.done?" is-done":""}">
