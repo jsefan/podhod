@@ -1156,7 +1156,7 @@ document.addEventListener("click",e=>{
   switch(a){
     case "tab": ui.prog=null;tab=el.dataset.tab;LS.set("podhod:tab",tab);ui.confirm=null;render();window.scrollTo(0,0);return;
     case "start-empty": return startWorkout(L.workout,null,null);
-    case "start-cardio": return startWorkout(L.cardioW,[{name:L.cardioName,kind:"c",sets:[{w:"",r:""}]}],null);
+    case "start-cardio": return startWorkout(L.cardioW,[{name:"",kind:"c",sets:[{w:"",r:""}]}],null);
     case "add-cardio":{obj.exercises.push({name:"",kind:"c",sets:[{w:"",r:"",done:false}]});touched(el);render();const ins=document.querySelectorAll(".ex-name");ins[ins.length-1]&&ins[ins.length-1].focus();return}
     case "start-tpl":{const t=templates.find(t=>t.id===id);if(t)startWorkout(t.name,clone(t.exercises||[]),t.id);return}
     case "repeat":{const s=sessions.find(s=>s.id===id);if(s)startWorkout(s.name,clone(s.exercises||[]),s.templateId&&templates.some(t=>t.id===s.templateId)?s.templateId:null);return}
